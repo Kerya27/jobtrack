@@ -1,5 +1,7 @@
 # JobTrack — job application tracker
 
+**Live demo: https://jobtrack-dfgs.onrender.com** (free hosting: the first load after a pause can take up to a minute)
+
 Paste a link to a vacancy → JobTrack downloads the page, pulls out company, position, location,
 salary and description, and keeps a timeline for every application. The stats page shows what
 actually works: the funnel, response rate **per resume version** and per job board.
