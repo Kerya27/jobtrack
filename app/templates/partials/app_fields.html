@@ -1,0 +1,81 @@
+{# Fields shared by the "new" and "edit" forms. Expects: values, errors, mode, resume_versions. #}
+{% from "macros.html" import input, textarea %}
+
+{% if errors.get("__all__") %}<p class="field-error">{{ errors["__all__"] }}</p>{% endif %}
+
+<div class="grid">
+  {{ input("position", t("f_position"), values, errors, required=true) }}
+  {{ input("company", t("f_company"), values, errors, required=true) }}
+</div>
+
+<div class="grid">
+  {{ input("location", t("f_location"), values, errors) }}
+  <label>
+    {{ t("f_work_mode") }}
+    <select name="work_mode">
+      {% for mode in WORK_MODES %}
+        <option value="{{ mode.value }}" {% if values.get("work_mode", "unknown") == mode.value %}selected{% endif %}>{{ work_mode_label(mode) }}</option>
+      {% endfor %}
+    </select>
+  </label>
+</div>
+
+<fieldset>
+  <legend>{{ t("section_salary") }}</legend>
+  <div class="grid salary-grid">
+    {{ input("salary_min", t("f_salary_min"), values, errors, extra='inputmode="numeric"') }}
+    {{ input("salary_max", t("f_salary_max"), values, errors, extra='inputmode="numeric"') }}
+    {{ input("salary_currency", t("f_salary_currency"), values, errors, placeholder="CZK", extra='list="currencies" maxlength="3" autocapitalize="characters"') }}
+  </div>
+  <datalist id="currencies">
+    {% for c in ["CZK", "EUR", "USD", "UAH", "PLN", "GBP"] %}<option value="{{ c }}">{% endfor %}
+  </datalist>
+</fieldset>
+
+<div class="grid">
+  {{ input("url", t("f_url"), values, errors, type="url", placeholder="https://") }}
+  {{ input("source", t("f_source"), values, errors) }}
+</div>
+
+<div class="grid">
+  <label>
+    {{ t("f_resume_version") }}
+    <input type="text" name="resume_version" value="{{ values.get('resume_version', '') }}"
+           list="resume-versions" placeholder="backend-v2"
+           {% if errors.get("resume_version") %}aria-invalid="true"{% endif %}>
+    <small>{{ errors.get("resume_version") or t("f_resume_version_hint") }}</small>
+    <datalist id="resume-versions">
+      {% for v in resume_versions or [] %}<option value="{{ v }}">{% endfor %}
+    </datalist>
+  </label>
+  {% if mode == "edit" %}
+    <label>
+      {{ t("f_status") }}
+      <select name="status">
+        {% for s in STATUSES %}
+          <option value="{{ s.value }}" {% if values.get("status") == s.value %}selected{% endif %}>{{ status_label(s) }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  {% else %}
+    {{ input("applied_at", t("f_applied_at"), values, errors, type="date") }}
+  {% endif %}
+</div>
+
+{% if mode == "edit" %}
+  <div class="grid">
+    {{ input("applied_at", t("f_applied_at"), values, errors, type="date") }}
+    <div></div>
+  </div>
+{% endif %}
+
+<details {% if mode == "edit" or errors.get("contact_email") %}open{% endif %}>
+  <summary>{{ t("section_contact") }}</summary>
+  <div class="grid">
+    {{ input("contact_name", t("f_contact_name"), values, errors) }}
+    {{ input("contact_email", t("f_contact_email"), values, errors, type="email") }}
+  </div>
+</details>
+
+{{ textarea("notes", t("f_notes"), values, errors, rows=3) }}
+{{ textarea("description", t("f_description"), values, errors, rows=8 if mode == "edit" else 5) }}

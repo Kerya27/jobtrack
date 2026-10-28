@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf, input with context %}
+{% block title %}{{ t("register_title") }} — {{ t("app_name") }}{% endblock %}
+{% block content %}
+<article class="auth-card">
+  <h2>{{ t("register_title") }}</h2>
+  {% if not allowed %}
+    <p class="flash flash-warning">{{ t("registration_closed") }}</p>
+  {% else %}
+    {% set errors = errors or {} %}
+    <form method="post" action="/register">
+      {{ csrf() }}
+      {{ input("email", t("email"), form, errors, type="email", required=true, extra='autocomplete="email"') }}
+      <label>
+        {{ t("password") }}
+        <input type="password" name="password" required minlength="8" autocomplete="new-password"
+               {% if errors.get("password") %}aria-invalid="true"{% endif %}>
+        <small {% if errors.get("password") %}class="field-error"{% endif %}>{{ errors.get("password") or t("password_hint") }}</small>
+      </label>
+      <label>
+        {{ t("password_repeat") }}
+        <input type="password" name="password_repeat" required minlength="8" autocomplete="new-password">
+      </label>
+      <button type="submit">{{ t("register_button") }}</button>
+    </form>
+  {% endif %}
+  <p>{{ t("have_account") }} <a href="/login">{{ t("nav_login") }}</a></p>
+</article>
+{% endblock %}

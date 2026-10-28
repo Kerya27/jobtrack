@@ -1,0 +1,26 @@
+{# "New application" form, swapped into #new-form by HTMX. #}
+{% from "macros.html" import csrf with context %}
+<form method="post" action="{{ action }}" hx-post="{{ action }}" hx-target="#new-form"
+      hx-disabled-elt="#new-form button" class="app-form">
+  {{ csrf() }}
+  {% if message %}
+    <p class="flash flash-{{ message_kind }}" role="status">
+      {{ message }}
+      {% if offer_text_fallback %}
+        <br><a href="#" hx-get="/applications/new?mode=text&amp;url={{ values.get('url', '')|urlencode }}" hx-target="#new-form">{{ t("paste_text_button") }}</a>
+      {% endif %}
+    </p>
+  {% endif %}
+
+  {% include "partials/app_fields.html" %}
+
+  <label class="switch-row">
+    <input type="checkbox" role="switch" name="only_save" value="1" {% if values.get("status") == "saved" %}checked{% endif %}>
+    {{ t("only_save") }}
+  </label>
+
+  <div class="form-actions">
+    <button type="submit">{{ t("save") }}</button>
+    <button type="button" class="secondary outline" onclick="document.getElementById('new-form').innerHTML = ''">{{ t("cancel") }}</button>
+  </div>
+</form>

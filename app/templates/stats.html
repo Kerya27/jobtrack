@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% from "macros.html" import badge %}
+{% block title %}{{ t("stats_title") }} — {{ t("app_name") }}{% endblock %}
+
+{% macro pct(value) -%}
+{{ "—" if value is none else "%.0f%%"|format(value * 100) }}
+{%- endmacro %}
+
+{% macro group_table(title, rows) %}
+<article>
+  <h3>{{ title }}</h3>
+  <div class="table-wrap">
+    <table class="striped">
+      <thead>
+        <tr>
+          <th>{{ t("col_group") }}</th>
+          <th class="num">{{ t("col_applied") }}</th>
+          <th class="num">{{ t("col_replied") }}</th>
+          <th class="num">{{ t("col_rate") }}</th>
+          <th class="num">{{ t("col_interviews") }}</th>
+          <th class="num">{{ t("col_interview_rate") }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            <td>{% if row.name %}{{ row.name }}{% else %}<em class="muted">{{ t("not_set") }}</em>{% endif %}</td>
+            <td class="num">{{ row.applied }}</td>
+            <td class="num">{{ row.responded }}</td>
+            <td class="num"><strong>{{ pct(row.response_rate) }}</strong></td>
+            <td class="num">{{ row.interviews }}</td>
+            <td class="num">{{ pct(row.interview_rate) }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</article>
+{% endmacro %}
+
+{% block content %}
+<h2>{{ t("stats_title") }}</h2>
+
+{% if stats.total == 0 %}
+  <p class="empty">{{ t("stats_empty") }}</p>
+{% else %}
+  <div class="kpis">
+    <article class="kpi"><div class="value">{{ stats.total }}</div><div class="label">{{ t("stats_total") }}</div></article>
+    <article class="kpi"><div class="value">{{ stats.active }}</div><div class="label">{{ t("stats_active") }}</div></article>
+    <article class="kpi"><div class="value">{{ pct(stats.response_rate) }}</div><div class="label">{{ t("stats_response_rate") }}</div></article>
+    <article class="kpi">
+      <div class="value">{{ "—" if stats.avg_days_to_response is none else "%.1f"|format(stats.avg_days_to_response) }}</div>
+      <div class="label">{{ t("stats_avg_days") }}</div>
+    </article>
+  </div>
+
+  <article>
+    <h3>{{ t("stats_funnel") }}</h3>
+    <div class="funnel">
+      {% for step in stats.funnel %}
+        <div class="funnel-row">
+          <span>{{ t(step.key) }}</span>
+          <div class="funnel-bar" role="img" aria-label="{{ t(step.key) }}: {{ step.count }}">
+            <span style="width: {{ ((step.pct or 0) * 100)|round(1) }}%"></span>
+          </div>
+          <span class="funnel-num"><strong>{{ step.count }}</strong> · {{ pct(step.pct) }}</span>
+        </div>
+      {% endfor %}
+    </div>
+    <p><small class="muted">{{ t("stats_funnel_hint") }}</small></p>
+  </article>
+
+  <article>
+    <h3>{{ t("stats_weekly") }}</h3>
+    {% set top = stats.weekly_max or 1 %}
+    <div class="hist" role="img" aria-label="{{ t('stats_weekly') }}">
+      {% for week in stats.weekly %}
+        <div class="hist-col" title="{{ t('week_of', date=week.start|d) }}: {{ week.count }}">
+          <span class="hist-val">{{ week.count if week.count else "" }}</span>
+          <div class="hist-bar" style="height: {{ (week.count / top * 100)|round(1) }}%"></div>
+          <span class="hist-label">{{ week.start.strftime("%d.%m") }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  </article>
+
+  {{ group_table(t("stats_by_resume"), stats.by_resume) }}
+  {{ group_table(t("stats_by_source"), stats.by_source) }}
+
+  <article>
+    <h3>{{ t("stats_by_status") }}</h3>
+    <div class="chips">
+      {% for status, count in stats.by_status %}
+        <a href="/?status={{ status.value }}" class="status-count">{{ badge(status) }} <strong>{{ count }}</strong></a>
+      {% endfor %}
+    </div>
+  </article>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf with context %}
+
+{% block content %}
+<article class="quick-add">
+  <form hx-post="/applications/parse" hx-target="#new-form" hx-indicator="#parse-indicator"
+        hx-disabled-elt="find button" action="/applications/parse" method="post">
+    {{ csrf() }}
+    <fieldset role="group">
+      <input type="url" name="url" required inputmode="url" autocomplete="off"
+             placeholder="{{ t('url_placeholder') }}" aria-label="{{ t('url_placeholder') }}">
+      <button type="submit">{{ t("parse_button") }}</button>
+    </fieldset>
+  </form>
+  <p class="quick-links">
+    <a href="#" hx-get="/applications/new?mode=text" hx-target="#new-form">{{ t("paste_text_button") }}</a>
+    <span aria-hidden="true">·</span>
+    <a href="#" hx-get="/applications/new" hx-target="#new-form">{{ t("manual_button") }}</a>
+  </p>
+  <p id="parse-indicator" class="htmx-indicator" aria-busy="true">{{ t("parsing") }}</p>
+  <div id="new-form"></div>
+</article>
+
+<form id="filters" class="filters" action="/" method="get"
+      hx-get="/" hx-target="#results" hx-push-url="true"
+      hx-trigger="submit, input changed delay:300ms from:#q, change from:#archived"
+      hx-include="#results input[name=status]:checked">
+  <input type="search" id="q" name="q" value="{{ filters.q or '' }}"
+         placeholder="{{ t('search_placeholder') }}" aria-label="{{ t('search_placeholder') }}">
+  <label class="archive-toggle">
+    <input type="checkbox" id="archived" name="archived" value="1" role="switch" {% if filters.archived %}checked{% endif %}>
+    {{ t("show_archive") }}
+  </label>
+</form>
+
+<div id="results">
+  {% include "partials/results.html" %}
+</div>
+{% endblock %}

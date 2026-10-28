@@ -1,0 +1,35 @@
+{% from "macros.html" import csrf with context %}
+<section id="timeline" class="timeline">
+  <h3>{{ t("timeline") }}</h3>
+
+  <form method="post" action="/applications/{{ app.id }}/events"
+        hx-post="/applications/{{ app.id }}/events" hx-target="#timeline" hx-swap="outerHTML"
+        hx-disabled-elt="#timeline button">
+    {{ csrf() }}
+    <fieldset role="group">
+      <select name="type" aria-label="{{ t('add_event') }}">
+        {% for et in USER_EVENT_TYPES %}<option value="{{ et.value }}">{{ event_type_label(et) }}</option>{% endfor %}
+      </select>
+      <button type="submit">+</button>
+    </fieldset>
+    <textarea name="text" rows="2" required placeholder="{{ t('event_text_placeholder') }}"
+              aria-label="{{ t('event_text') }}" {% if event_error %}aria-invalid="true"{% endif %}></textarea>
+    {% if event_error %}<small class="field-error">{{ event_error }}</small>{% endif %}
+  </form>
+
+  {% if events %}
+    <ol class="events">
+      {% for e in events %}
+        <li class="event event-{{ e.type.value }}">
+          <div class="event-head">
+            <span class="event-type">{{ event_type_label(e.type) }}</span>
+            <time>{{ e.created_at|dt }}</time>
+          </div>
+          <div class="event-text">{{ e.text }}</div>
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <p class="empty">{{ t("timeline_empty") }}</p>
+  {% endif %}
+</section>

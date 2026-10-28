@@ -1,0 +1,28 @@
+{% from "macros.html" import badge %}
+<article class="app-row" id="app-{{ app.id }}">
+  <div class="app-main">
+    <a href="/applications/{{ app.id }}" class="app-title">{{ app.position }}</a>
+    <div class="app-company">
+      {{ app.company }}{% if app.location %} · {{ app.location }}{% endif %}
+      {% if app.work_mode.value != "unknown" %} · {{ work_mode_label(app.work_mode) }}{% endif %}
+    </div>
+    <div class="app-meta">
+      {{ badge(app.status) }}
+      {% if app.archived %}<span class="badge badge-archived">{{ t("archived_badge") }}</span>{% endif %}
+      {% set salary = format_salary(app.salary_min, app.salary_max, app.salary_currency) %}
+      {% if salary %}<span>{{ salary }}</span>{% endif %}
+      {% if app.source %}<span>{{ app.source }}</span>{% endif %}
+      <span title="{{ t('last_activity') }}">{{ app.last_activity_at|dt }}</span>
+    </div>
+  </div>
+  <div class="app-side">
+    <select name="new_status" aria-label="{{ t('change_status') }}"
+            hx-post="/applications/{{ app.id }}/status" hx-trigger="change"
+            hx-target="#app-{{ app.id }}" hx-swap="outerHTML"
+            hx-include="#filters, #status-chips input:checked">
+      {% for s in STATUSES %}
+        <option value="{{ s.value }}" {% if app.status == s %}selected{% endif %}>{{ status_label(s) }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</article>

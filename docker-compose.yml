@@ -1,0 +1,32 @@
+# Local check of the production setup: the app + PostgreSQL 16.
+# Run: docker compose up --build   →   http://localhost:8000
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: jobtrack
+      POSTGRES_PASSWORD: jobtrack
+      POSTGRES_DB: jobtrack
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jobtrack -d jobtrack"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg://jobtrack:jobtrack@db:5432/jobtrack
+      SECRET_KEY: ${SECRET_KEY:-local-docker-secret-change-me}
+      ENV: ${ENV:-dev}
+      ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% from "macros.html" import badge, csrf with context %}
+
+{% block title %}{{ app.position }} — {{ app.company }}{% endblock %}
+
+{% block content %}
+<p><a href="/">{{ t("back_to_list") }}</a></p>
+
+<hgroup class="card-header">
+  <h2>{{ app.position }}</h2>
+  <p>
+    {{ app.company }}
+    {{ badge(app.status) }}
+    {% if app.archived %}<span class="badge badge-archived">{{ t("archived_badge") }}</span>{% endif %}
+    {% if app.url %}· <a href="{{ app.url }}" target="_blank" rel="noopener noreferrer nofollow">{{ app.source or t("f_url") }} ↗</a>{% endif %}
+  </p>
+</hgroup>
+
+<div class="card-layout">
+  <article>
+    <form method="post" action="/applications/{{ app.id }}" class="app-form">
+      {{ csrf() }}
+      {% with mode = "edit" %}{% include "partials/app_fields.html" %}{% endwith %}
+      <button type="submit">{{ t("save") }}</button>
+    </form>
+  </article>
+
+  <aside>
+    {% include "partials/timeline.html" %}
+
+    <div class="card-actions">
+      <form method="post" action="/applications/{{ app.id }}/archive">
+        {{ csrf() }}
+        <button type="submit" class="secondary outline">{{ t("unarchive") if app.archived else t("archive") }}</button>
+      </form>
+      <form method="post" action="/applications/{{ app.id }}/delete"
+            onsubmit='return confirm({{ t("delete_confirm")|tojson }})'>
+        {{ csrf() }}
+        <button type="submit" class="danger outline">{{ t("delete") }}</button>
+      </form>
+    </div>
+  </aside>
+</div>
+{% endblock %}

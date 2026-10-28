@@ -1,0 +1,11 @@
+{% include "partials/chips.html" %}
+
+{% if apps %}
+  <div class="app-list">
+    {% for app in apps %}{% include "partials/app_row.html" %}{% endfor %}
+  </div>
+{% elif count_all == 0 and not filters.q %}
+  <p class="empty">{{ t("empty_list") }}</p>
+{% else %}
+  <p class="empty">{{ t("empty_filtered") }}</p>
+{% endif %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — {{ t("app_name") }}{% endblock %}
+{% block content %}
+<article class="auth-card">
+  <h2>{{ title }}</h2>
+  <p>{{ text }}</p>
+  <p><a href="/">{{ t("back_to_list") }}</a></p>
+</article>
+{% endblock %}

@@ -1,0 +1,31 @@
+{# Form helpers: label + input + error message shown right under the field. #}
+
+{% macro input(name, label, values, errors, type="text", required=false, placeholder="", extra="") -%}
+<label>
+  {{ label }}{% if required %} <span class="req">*</span>{% endif %}
+  <input type="{{ type }}" name="{{ name }}" value="{{ values.get(name, '') }}"
+         {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+         {% if required %}required{% endif %}
+         {% if errors.get(name) %}aria-invalid="true" aria-describedby="{{ name }}-error"{% endif %}
+         {{ extra|safe }}>
+  {% if errors.get(name) %}<small id="{{ name }}-error" class="field-error">{{ errors[name] }}</small>{% endif %}
+</label>
+{%- endmacro %}
+
+{% macro textarea(name, label, values, errors, rows=4, placeholder="") -%}
+<label>
+  {{ label }}
+  <textarea name="{{ name }}" rows="{{ rows }}"
+            {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+            {% if errors.get(name) %}aria-invalid="true" aria-describedby="{{ name }}-error"{% endif %}>{{ values.get(name, '') }}</textarea>
+  {% if errors.get(name) %}<small id="{{ name }}-error" class="field-error">{{ errors[name] }}</small>{% endif %}
+</label>
+{%- endmacro %}
+
+{% macro badge(status) -%}
+<span class="badge badge-{{ status.value if status.value is defined else status }}">{{ status_label(status) }}</span>
+{%- endmacro %}
+
+{% macro csrf() -%}
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+{%- endmacro %}

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>{% block title %}{{ t("app_name") }}{% endblock %}</title>
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.1.1/css/pico.min.css"
+        integrity="sha384-L1dWfspMTHU/ApYnFiMz2QID/PlP1xCW9visvBdbEkOLkSSWsP6ZJWhPw6apiXxU"
+        crossorigin="anonymous">
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.11/dist/htmx.min.js"
+          integrity="sha384-2OatzQy1H+Zd/IIrjr1TcuDGqLXeHhbooAyJY1KdQMKnr4LZ22k31GBLdYKHmVjg"
+          crossorigin="anonymous" defer></script>
+</head>
+<body hx-headers='{"X-CSRF-Token": "{{ csrf_token }}"}'>
+  <header class="container">
+    <nav>
+      <ul>
+        <li><a href="/" class="brand"><strong>{{ t("app_name") }}</strong></a></li>
+      </ul>
+      <ul>
+        {% if user %}
+          <li><a href="/">{{ t("nav_applications") }}</a></li>
+          <li><a href="/stats">{{ t("nav_stats") }}</a></li>
+          <li><a href="/settings">{{ t("nav_settings") }}</a></li>
+          <li>
+            <form method="post" action="/logout" class="inline-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <button type="submit" class="link-button">{{ t("nav_logout") }}</button>
+            </form>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </header>
+  <main class="container">
+    {% for f in flashes %}
+      <p class="flash flash-{{ f.kind }}" role="status">{{ f.message }}</p>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf with context %}
+{% block title %}{{ t("settings_title") }} — {{ t("app_name") }}{% endblock %}
+
+{% block content %}
+<h2>{{ t("settings_title") }}</h2>
+<p class="muted">{{ user.email }}</p>
+
+<article id="data">
+  <h3>{{ t("data_title") }}</h3>
+  <p><a href="/export.csv" role="button" class="outline" download>{{ t("export_csv") }}</a></p>
+  <p><small>{{ t("export_hint") }}</small></p>
+
+  <form method="post" action="/import" enctype="multipart/form-data">
+    {{ csrf() }}
+    <label>
+      {{ t("import_csv") }}
+      <input type="file" name="file" accept=".csv,text/csv" required
+             {% if import_error %}aria-invalid="true"{% endif %}>
+      <small {% if import_error %}class="field-error"{% endif %}>{{ import_error or t("import_hint") }}</small>
+    </label>
+    <button type="submit" class="secondary">{{ t("import_button") }}</button>
+  </form>
+
+  {% if import_report %}
+    <p class="flash flash-{{ 'success' if import_report.added else 'warning' }}" role="status">
+      {{ t("import_report", added=import_report.added, skipped=import_report.skipped) }}
+    </p>
+    {% if import_report.errors %}
+      <ul class="import-errors">
+        {% for e in import_report.errors %}<li><small>{{ e }}</small></li>{% endfor %}
+      </ul>
+    {% endif %}
+  {% endif %}
+</article>
+
+<article>
+  <h3>{{ t("change_password") }}</h3>
+  {% set pe = password_errors or {} %}
+  <form method="post" action="/settings/password">
+    {{ csrf() }}
+    <label>
+      {{ t("current_password") }}
+      <input type="password" name="current_password" required autocomplete="current-password"
+             {% if pe.get("current_password") %}aria-invalid="true"{% endif %}>
+      {% if pe.get("current_password") %}<small class="field-error">{{ pe["current_password"] }}</small>{% endif %}
+    </label>
+    <div class="grid">
+      <label>
+        {{ t("new_password") }}
+        <input type="password" name="new_password" required minlength="8" autocomplete="new-password"
+               {% if pe.get("new_password") %}aria-invalid="true"{% endif %}>
+        <small {% if pe.get("new_password") %}class="field-error"{% endif %}>{{ pe.get("new_password") or t("password_hint") }}</small>
+      </label>
+      <label>
+        {{ t("password_repeat") }}
+        <input type="password" name="password_repeat" required minlength="8" autocomplete="new-password">
+      </label>
+    </div>
+    <button type="submit">{{ t("change_password") }}</button>
+  </form>
+</article>
+
+<article class="danger-zone">
+  <h3>{{ t("danger_zone") }}</h3>
+  <p>{{ t("delete_account_hint") }}</p>
+  <form method="post" action="/settings/delete" onsubmit='return confirm({{ t("delete_account_confirm")|tojson }})'>
+    {{ csrf() }}
+    <label>
+      {{ t("current_password") }}
+      <input type="password" name="password" required autocomplete="current-password"
+             {% if delete_error %}aria-invalid="true"{% endif %}>
+      {% if delete_error %}<small class="field-error">{{ delete_error }}</small>{% endif %}
+    </label>
+    <button type="submit" class="danger outline">{{ t("delete_account") }}</button>
+  </form>
+</article>
+{% endblock %}

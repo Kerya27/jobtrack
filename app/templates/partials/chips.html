@@ -1,0 +1,17 @@
+{# Status filter chips with counters. `oob` = true when sent as an out-of-band update. #}
+<div id="status-chips" class="chips" role="radiogroup" {% if oob %}hx-swap-oob="true"{% endif %}>
+  <label class="chip">
+    <input type="radio" name="status" value="" {% if not filters.status %}checked{% endif %}
+           hx-get="/" hx-target="#results" hx-include="#filters" hx-push-url="true" hx-trigger="change">
+    {{ t("all") }} <span class="count">{{ count_all }}</span>
+  </label>
+  {% for s in STATUSES %}
+    {% if counts.get(s) or filters.status == s %}
+      <label class="chip chip-{{ s.value }}">
+        <input type="radio" name="status" value="{{ s.value }}" {% if filters.status == s %}checked{% endif %}
+               hx-get="/" hx-target="#results" hx-include="#filters" hx-push-url="true" hx-trigger="change">
+        {{ status_label(s) }} <span class="count">{{ counts.get(s, 0) }}</span>
+      </label>
+    {% endif %}
+  {% endfor %}
+</div>

@@ -1,0 +1,33 @@
+[project]
+name = "jobtrack"
+version = "1.0.0"
+description = "Job application tracker: paste a vacancy link, track statuses, see what works."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "S", "C4", "PTH", "N"]
+ignore = [
+    "RUF001",  # Cyrillic letters in strings are intentional (Russian UI)
+    "RUF002",
+    "RUF003",
+    "B008",    # FastAPI's Depends()/Form() in defaults is the idiomatic style
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106", "E501", "S311"]
+"app/i18n.py" = ["E501"]  # long UI strings read better unwrapped
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning:extruct.*", "ignore::DeprecationWarning:html_text.*"]
