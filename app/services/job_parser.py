@@ -25,6 +25,14 @@ from app.i18n import t
 from app.models import WorkMode
 from app.services.salary import extract_salary
 from app.services.ssrf import FetchedPage, FetchError, FetchFailure, fetch_html
+from app.services.text_heuristics import (
+    company_from_slug,
+    company_slug_from_url,
+    guess_work_mode,
+    main_content_html,
+    parse_vacancy_text,
+    split_title,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +67,6 @@ KNOWN_SOURCES: dict[str, str] = {
     "teamio.com": "Teamio",
     "jooble.org": "Jooble",
 }
-
-_REMOTE_WORDS = ("remote", "na dálku", "home office", "удален", "віддален", "дистанц")
-_HYBRID_WORDS = ("hybrid", "hybridní", "гибрид", "гібрид")
 
 
 @dataclass
@@ -163,15 +168,6 @@ def _to_int(value: Any) -> int | None:
         except ValueError:
             return None
     return round(number) if 0 < number <= 100_000_000 else None
-
-
-def guess_work_mode(*texts: str | None) -> WorkMode:
-    blob = " ".join(t for t in texts if t).lower()
-    if any(word in blob for word in _HYBRID_WORDS):
-        return WorkMode.HYBRID
-    if any(word in blob for word in _REMOTE_WORDS):
-        return WorkMode.REMOTE
-    return WorkMode.UNKNOWN
 
 
 # ---------- JSON-LD ----------
@@ -310,11 +306,70 @@ def _apply_meta(job: ParsedJob, soup: BeautifulSoup) -> None:
         title = _meta(soup, "og:title", "twitter:title")
         if not title and soup.title and soup.title.string:
             title = soup.title.string
-        job.position = _clean(title)
+        title = _clean(title)
+        if title:
+            job.position, company = split_title(title, job.source)
+            job.company = job.company or company
     if not job.description:
         description = _meta(soup, "og:description", "twitter:description", "description")
         if description:
             job.description = html_to_text(description)[:MAX_DESCRIPTION]
+
+
+# Per-site CSS selectors (all optional; the generic path below is the real safety net).
+# NOTE: these follow the sites' public markup as far as known and are not guaranteed.
+SITE_SELECTORS: dict[str, dict[str, str]] = {
+    "DOU": {
+        "company": ".b-compinfo .l-n a, .l-vacancy .company a, .l-n a",
+        "location": ".sh-info .place, .l-vacancy .place",
+        "salary": ".sh-info .salary, .l-vacancy .salary",
+        "description": ".b-typo.vacancy-section, .vacancy-section",
+    },
+}
+
+
+def _select_text(soup: BeautifulSoup, selector: str | None) -> str | None:
+    if not selector:
+        return None
+    node = soup.select_one(selector)
+    return _clean(node.get_text(" ", strip=True)) if node else None
+
+
+def _apply_site_selectors(job: ParsedJob, soup: BeautifulSoup) -> None:
+    selectors = SITE_SELECTORS.get(job.source or "")
+    if not selectors:
+        return
+    job.company = job.company or _select_text(soup, selectors.get("company"))
+    job.location = job.location or _select_text(soup, selectors.get("location"))
+    if job.salary_min is None and job.salary_max is None:
+        salary = _select_text(soup, selectors.get("salary"))
+        found = extract_salary(salary) if salary else None
+        if found:
+            job.salary_min, job.salary_max, job.salary_currency = (
+                found.min,
+                found.max,
+                found.currency,
+            )
+    node = soup.select_one(selectors["description"]) if selectors.get("description") else None
+    if node is not None:
+        text = html_to_text(str(node))
+        if len(text) > len(job.description or ""):
+            job.description = text[:MAX_DESCRIPTION]
+
+
+def _apply_page_text(job: ParsedJob, html: str) -> None:
+    """Pages without JSON-LD: og:description is a one-line teaser, so take the real text block."""
+    main = main_content_html(html)
+    if main:
+        text = html_to_text(main)
+        if len(text) > max(len(job.description or "") * 1.5, 200):
+            job.description = text[:MAX_DESCRIPTION]
+
+
+def _apply_company_from_url(job: ParsedJob) -> None:
+    slug = company_slug_from_url(job.url)
+    if slug and not job.company:
+        job.company = company_from_slug(slug, job.description, job.position)
 
 
 # ---------- public API ----------
@@ -326,8 +381,13 @@ def parse_html(html: str, url: str) -> ParsedJob:
     posting = find_job_posting(html, url)
     if posting:
         _apply_job_posting(job, posting)
+    soup = BeautifulSoup(html, "lxml")
     if not job.position or not job.description:
-        _apply_meta(job, BeautifulSoup(html, "lxml"))
+        _apply_meta(job, soup)
+    if not posting:
+        _apply_page_text(job, html)
+    _apply_site_selectors(job, soup)
+    _apply_company_from_url(job)
 
     if job.work_mode == WorkMode.UNKNOWN:
         job.work_mode = guess_work_mode(job.position, job.location)
@@ -355,10 +415,20 @@ def parse_job(url: str, fetch: Callable[[str], FetchedPage] | None = None) -> Pa
 
 
 def parse_pasted_text(text: str, url: str | None = None) -> ParsedJob:
-    """Fallback when the page can't be fetched: the user pastes the vacancy text."""
+    """Fallback when the page can't be fetched: the user pastes the vacancy text.
+
+    Finds position, location, work mode, company (a guess) and salary; the full text stays
+    in the description so nothing is lost.
+    """
     cleaned = re.sub(r"\n{3,}", "\n\n", text.replace("\r\n", "\n")).strip()[:MAX_DESCRIPTION]
     job = ParsedJob(url=url or "", source=source_from_url(url) if url else None)
     job.description = cleaned or None
+    fields = parse_vacancy_text(cleaned)
+    job.position, job.company = fields.position, fields.company
+    job.location, job.work_mode = fields.location, fields.work_mode
+    if url and not job.company:
+        slug = company_slug_from_url(url)
+        job.company = company_from_slug(slug, cleaned) if slug else None
     salary = extract_salary(cleaned[:20_000])
     if salary:
         job.salary_min, job.salary_max, job.salary_currency = (

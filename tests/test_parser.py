@@ -141,3 +141,71 @@ def test_pasted_text_fallback() -> None:
     assert (job.salary_min, job.salary_max, job.salary_currency) == (70000, 95000, "CZK")
     assert job.description == "Backend Developer\n\nNabízíme: 70 000 – 95 000 Kč, home office."
     assert job.source == "Prace.cz"
+
+
+# ---------- pages without JSON-LD (e.g. DOU) and pasted text ----------
+
+
+def test_page_without_structured_data_uses_full_text_and_url_slug() -> None:
+    job = parse_html(
+        fixture("dou_page.html"),
+        "https://jobs.dou.ua/companies/sbc-performance/vacancies/360629/",
+    )
+    assert not job.found_structured_data
+    assert job.position == "Full Stack Engineer (Python & Angular)"
+    # company: slug from the URL, spelled as it appears in the page text
+    assert job.company == "SBC Performance"
+    assert job.source == "DOU"
+    assert job.description is not None
+    assert "Requirements:" in job.description and "• 3+ years of experience" in job.description
+    assert "Similar vacancies" not in job.description and "© DOU" not in job.description
+    assert job.is_complete
+
+
+def test_slug_is_prettified_when_not_found_in_text() -> None:
+    job = parse_html(
+        "<html><head><title>QA</title></head><body></body></html>",
+        "https://jobs.dou.ua/companies/acme-labs/vacancies/1/",
+    )
+    assert job.company == "Acme Labs"
+
+
+@pytest.mark.parametrize(
+    ("title", "position", "company"),
+    [
+        ("Backend Developer | Kiwi.com", "Backend Developer", "Kiwi.com"),
+        ("Python Engineer at Red Hat", "Python Engineer", "Red Hat"),
+        ("Python Engineer | Jobs.cz", "Python Engineer", None),
+        ("Software Engineer – Python", "Software Engineer – Python", None),
+    ],
+)
+def test_title_split(title: str, position: str, company: str | None) -> None:
+    html = f"<html><head><title>{title}</title></head></html>"
+    job = parse_html(html, "https://www.jobs.cz/rpd/1/")
+    assert (job.position, job.company) == (position, company)
+
+
+def test_pasted_vacancy_text_is_split_into_fields() -> None:
+    text = (FIXTURES / "dou_pasted.txt").read_text(encoding="utf-8")
+    job = parse_pasted_text(text, "https://jobs.dou.ua/companies/sbc-performance/vacancies/360629/")
+    assert job.position == "Full Stack Engineer (Python & Angular)"
+    assert job.company == "SBC Performance"
+    assert job.location == "Прага (Чехія), Варшава (Польща), віддалено"
+    assert job.work_mode == WorkMode.REMOTE
+    assert job.source == "DOU"
+    assert job.salary_min is None  # "Competitive compensation" is not a number
+    assert job.description is not None and "Key Responsibilities:" in job.description
+
+
+def test_pasted_text_company_without_url() -> None:
+    job = parse_pasted_text("Python Developer\nBrno\nAcme Corp is a Czech software company.\n")
+    assert (job.position, job.location, job.company) == ("Python Developer", "Brno", "Acme Corp")
+
+
+def test_pasted_text_does_not_guess_a_wrong_company() -> None:
+    job = parse_pasted_text("Backend Developer\nWe are looking for a developer to join our team.\n")
+    assert job.company is None and job.position == "Backend Developer"
+    assert (
+        parse_pasted_text("Just one long sentence without any structure at all. " * 3).position
+        is None
+    )

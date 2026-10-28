@@ -176,9 +176,19 @@ Things the spec left open, and why they were decided this way:
 - **Salary** is integers + ISO currency code; the period (month/year/hour) is not stored — most
   Czech boards publish monthly amounts. Description salaries are only taken when a currency is
   present (to avoid "10k users").
+- **Pages without JSON-LD (DOU, many smaller boards)**: `og:description` is only a one-line teaser,
+  so the parser takes the block of the page with most paragraph/list text (a small "readability"
+  heuristic), drops nav/footer, and uses it as the description. The company is guessed from the
+  URL (`/companies/sbc-performance/` → "SBC Performance", spelled as in the page text), from a
+  `Position | Company` / `Position at Company` title, or from per-site CSS selectors
+  (`SITE_SELECTORS`, currently DOU, best-effort). Every guess lands in an editable form.
+- **Pasted text** is split into fields by rules, no LLM: line 1 = position, a short line with a
+  city/country or "remote" among the next 3 = location, work mode from that line, company from
+  `Company: X`, `About X` or a first sentence like "SBC Performance drives…". A wrong company is
+  worse than an empty one, so nothing is guessed from sentences starting with "We/Our/Join…".
 - **Work mode** comes from `jobLocationType: TELECOMMUTE`, otherwise from words in the title and
-  location (`remote`, `hybrid`, `hybridní`, `удалённо`…). The description is not scanned —
-  too many false positives.
+  location (`remote`, `hybrid`, `hybridní`, `удалённо`…). Fetched descriptions are not scanned
+  (too many false positives); pasted text is, but only for explicit phrases.
 - **CSV**: UTF-8 with BOM (Excel opens Czech and Cyrillic correctly), delimiter auto-detected
   (`,` `;` tab), dates as ISO or `dd.mm.yyyy`, statuses as codes or Russian labels. Cells that
   start with `= + - @` are prefixed with `'` on export (CSV injection) and restored on import.

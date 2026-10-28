@@ -1,0 +1,21 @@
+Full Stack Engineer (Python & Angular)
+ Прага (Чехія), Варшава (Польща), віддалено
+SBC Performance drives scalable growth for brands ready to expand globally.
+Working across eCommerce, health & wellness, education, and entertainment, our team helps brands acquire customers faster and scale across 26+ global markets.
+We combine data-driven paid media, performance creative, and advanced analytics to turn marketing into a predictable revenue engine.
+Right now, we’re looking for a Full Stack Engineer (Python & Angular) to join our Product & Engineering Team and help build a scalable AdTech and AI-powered platform.
+Key Responsibilities:
+
+* Implement server-side (backend) logic according to technical requirements and product specifications.
+* Build and evolve frontend applications with Angular (v16—18), NgRx, and PrimeNG.
+
+Requirements:
+
+* 3+ years of experience with Python in production
+* English level of B2 or higher
+
+What We Offer
+
+* Hybrid job in Prague/Warsaw or remote
+* Competitive compensation
+* Flexible working hours: we start our operation day between 9:00 — 11:00 CET
