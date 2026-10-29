@@ -1,4 +1,4 @@
-{% from "macros.html" import csrf with context %}
+{% from "macros.html" import csrf, icon with context %}
 <section id="timeline" class="timeline">
   <h3>{{ t("timeline") }}</h3>
 
@@ -10,7 +10,7 @@
       <select name="type" aria-label="{{ t('add_event') }}">
         {% for et in USER_EVENT_TYPES %}<option value="{{ et.value }}">{{ event_type_label(et) }}</option>{% endfor %}
       </select>
-      <button type="submit">+</button>
+      <button type="submit">{{ icon("plus") }}{{ t("add_event_button") }}</button>
     </fieldset>
     <textarea name="text" rows="2" required placeholder="{{ t('event_text_placeholder') }}"
               aria-label="{{ t('event_text') }}" {% if event_error %}aria-invalid="true"{% endif %}></textarea>

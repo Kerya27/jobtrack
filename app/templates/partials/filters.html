@@ -1,14 +1,18 @@
 {# Search, list/board switch, archive toggle and the "Filters" panel. Expects: filters, view, base_url. #}
+{% from "macros.html" import icon with context %}
 <form id="filters" class="filters" action="{{ base_url }}" method="get"
       hx-get="{{ base_url }}" hx-target="#results"
       hx-trigger="submit, input changed delay:300ms from:#q, change[target.id != 'q']"
       hx-include="#status-chips input:checked">
   <div class="filters-top">
-    <input type="search" id="q" name="q" value="{{ filters.q or '' }}"
-           placeholder="{{ t('search_placeholder') }}" aria-label="{{ t('search_placeholder') }}">
+    <div class="search-wrap">
+      {{ icon("search") }}
+      <input type="search" id="q" name="q" value="{{ filters.q or '' }}"
+             placeholder="{{ t('search_placeholder') }}" aria-label="{{ t('search_placeholder') }}">
+    </div>
     <div class="segmented" role="radiogroup">
-      <label><input type="radio" name="view" value="list" {% if view != "board" %}checked{% endif %}>{{ t("view_list") }}</label>
-      <label><input type="radio" name="view" value="board" {% if view == "board" %}checked{% endif %}>{{ t("view_board") }}</label>
+      <label>{{ icon("list") }}<input type="radio" name="view" value="list" {% if view != "board" %}checked{% endif %}>{{ t("view_list") }}</label>
+      <label>{{ icon("board") }}<input type="radio" name="view" value="board" {% if view == "board" %}checked{% endif %}>{{ t("view_board") }}</label>
     </div>
     <label class="archive-toggle">
       <input type="checkbox" id="archived" name="archived" value="1" role="switch" {% if filters.archived %}checked{% endif %}>
@@ -17,7 +21,7 @@
   </div>
 
   <details class="filters-more" {% if filters.extra_count %}open{% endif %}>
-    <summary>{{ t("filters") }}{% if filters.extra_count %} <span class="count-pill">{{ filters.extra_count }}</span>{% endif %}</summary>
+    <summary>{{ icon("filter") }}{{ t("filters") }}{% if filters.extra_count %} <span class="count-pill">{{ filters.extra_count }}</span>{% endif %}</summary>
     <div class="filters-grid">
       <label>
         {{ t("filter_sent") }}

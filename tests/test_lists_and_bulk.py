@@ -22,8 +22,10 @@ def titles(html: str) -> list[str]:
 
 def test_filters_by_work_mode_source_resume_and_sent(alice: Client) -> None:
     yesterday = (today_local() - timedelta(days=1)).isoformat()
+    tomorrow = (today_local() + timedelta(days=1)).isoformat()
     alice.create_app(position="Remote today", work_mode="remote", source="DOU")
     alice.create_app(position="Office old", work_mode="onsite", applied_at=yesterday)
+    alice.create_app(position="Future", applied_at=tomorrow)
     alice.create_app(position="Saved one", status="saved", resume_version="v2")
     alice.create_app(position="Hybrid v2", work_mode="hybrid", resume_version="v2")
 
@@ -37,7 +39,7 @@ def test_filters_by_work_mode_source_resume_and_sent(alice: Client) -> None:
     assert shown("sent=today") == {"Remote today", "Hybrid v2"}
     assert shown("sent=7d") == {"Remote today", "Hybrid v2", "Office old"}
     # junk values are ignored instead of failing
-    assert len(shown("work_mode=spaceship&sent=forever&sort=random")) == 4
+    assert len(shown("work_mode=spaceship&sent=forever&sort=random")) == 5
 
 
 def test_sorting(alice: Client) -> None:
@@ -54,6 +56,7 @@ def test_today_chip_counts_and_respects_goal(alice: Client) -> None:
     alice.create_app(position="One")
     alice.create_app(position="Two")
     alice.create_app(position="Later", status="saved")
+    alice.create_app(position="Future", applied_at=(today_local() + timedelta(days=1)).isoformat())
     page = alice.get("/").text
     assert "Today 2/5" in page
     assert 'href="/?sent=today"' in page  # works as a plain link without JS

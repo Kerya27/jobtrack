@@ -1,29 +1,29 @@
 {% extends "base.html" %}
-{% from "macros.html" import csrf with context %}
+{% from "macros.html" import csrf, icon with context %}
 
 {% block content %}
-{% if incoming_requests %}
-  <p class="flash flash-info" role="status"><a href="/friends">{{ t("friends_incoming_notice", count=incoming_requests) }}</a></p>
-{% endif %}
-
 <article class="quick-add">
+  <div class="quick-head">
+    <div>
+      <h2>{{ t("quick_add_title") }}</h2>
+      <p class="muted">{{ t("quick_add_hint") }}</p>
+    </div>
+  </div>
   <form hx-post="/applications/parse" hx-target="#new-form" hx-indicator="#parse-indicator"
         hx-disabled-elt="find button" action="/applications/parse" method="post">
     {{ csrf() }}
     <fieldset role="group">
       <input type="url" name="url" required inputmode="url" autocomplete="off"
              placeholder="{{ t('url_placeholder') }}" aria-label="{{ t('url_placeholder') }}">
-      <button type="submit">{{ t("parse_button") }}</button>
+      <button type="submit">{{ icon("spark") }}{{ t("parse_button") }}</button>
     </fieldset>
   </form>
   <p class="quick-links">
-    <a href="#" hx-get="/applications/new?mode=text" hx-target="#new-form">{{ t("paste_text_button") }}</a>
-    <span aria-hidden="true">·</span>
-    <a href="#" hx-get="/applications/new" hx-target="#new-form">{{ t("manual_button") }}</a>
-    <span aria-hidden="true">·</span>
-    <a href="/settings#bookmarklet">{{ t("bookmarklet_title") }}</a>
+    <a href="#" hx-get="/applications/new?mode=text" hx-target="#new-form">{{ icon("clipboard") }}{{ t("paste_text_button") }}</a>
+    <a href="#" hx-get="/applications/new" hx-target="#new-form">{{ icon("pen") }}{{ t("manual_button") }}</a>
+    <a href="/settings#bookmarklet">{{ icon("bookmark") }}{{ t("bookmarklet_title") }}</a>
   </p>
-  <p id="parse-indicator" class="htmx-indicator" aria-busy="true">{{ t("parsing") }}</p>
+  <p id="parse-indicator" class="htmx-indicator" aria-busy="true"><span class="parse-spinner"></span>{{ t("parsing") }}</p>
   <div id="new-form">
     {%- if new_form %}{% with values=new_form["values"], errors=new_form["errors"], message=new_form["message"], message_kind=new_form["message_kind"], offer_text_fallback=false, duplicates=[], action=new_form["action"], mode="new", resume_versions=new_form["resume_versions"] %}{% include "partials/app_form.html" %}{% endwith %}{% endif -%}
   </div>

@@ -1,24 +1,36 @@
 {% extends "base.html" %}
-{% from "macros.html" import csrf with context %}
+{% from "macros.html" import csrf, icon with context %}
 {% block title %}{{ t("friends_title") }} — {{ t("app_name") }}{% endblock %}
 
 {% block content %}
-<h2>{{ t("friends_title") }}</h2>
+<h2 class="page-title">{{ t("friends_title") }}</h2>
 <p class="muted">{{ t("friends_intro") }}</p>
+
+<article class="friend-invite">
+  <h3 class="section-head"><span class="icon-bubble">{{ icon("user-plus") }}</span>{{ t("friends_add") }}</h3>
+  <form method="post" action="/friends/request" class="friend-add">
+    {{ csrf() }}
+    <label for="friend-email">{{ t("friends_email") }}</label>
+    <fieldset role="group">
+      <input type="email" id="friend-email" name="email" required autocomplete="off" placeholder="friend@example.com">
+      <button type="submit">{{ icon("user-plus") }}{{ t("friends_send") }}</button>
+    </fieldset>
+  </form>
+</article>
 
 {% if incoming %}
   <article>
-    <h3>{{ t("friends_incoming") }}</h3>
+    <h3 class="section-head"><span class="icon-bubble">{{ icon("inbox") }}</span>{{ t("friends_incoming") }}</h3>
     <ul class="friend-list">
       {% for row in incoming %}
         <li>
           <span class="friend-email">{{ row.user.email }}</span>
           <span class="friend-actions">
             <form method="post" action="/friends/{{ row.friendship_id }}/accept" class="inline-form">
-              {{ csrf() }}<button type="submit" class="small">{{ t("friends_accept") }}</button>
+              {{ csrf() }}<button type="submit" class="success small">{{ icon("check") }}{{ t("friends_accept") }}</button>
             </form>
             <form method="post" action="/friends/{{ row.friendship_id }}/remove" class="inline-form">
-              {{ csrf() }}<button type="submit" class="secondary outline small">{{ t("friends_decline") }}</button>
+              {{ csrf() }}<button type="submit" class="secondary outline small">{{ icon("x") }}{{ t("friends_decline") }}</button>
             </form>
           </span>
         </li>
@@ -28,42 +40,42 @@
 {% endif %}
 
 <article>
-  <h3>{{ t("friends_list") }}</h3>
+  <h3 class="section-head"><span class="icon-bubble">{{ icon("users") }}</span>{{ t("friends_list") }}</h3>
   {% if friends %}
-    <ul class="friend-list">
+    <ul class="friend-cards">
       {% for row in friends %}
         <li>
-          <span>
-            <a href="/friends/{{ row.user.id }}" class="friend-email">{{ row.user.email }}</a>
-            <small class="muted">{{ t("friends_count", count=row.applications) }}</small>
-          </span>
-          <span class="friend-actions">
-            <a href="/friends/{{ row.user.id }}" role="button" class="small">{{ t("friends_open") }}</a>
-            <form method="post" action="/friends/{{ row.friendship_id }}/remove" class="inline-form"
-                  onsubmit='return confirm({{ t("friends_remove_confirm")|tojson }})'>
-              {{ csrf() }}<button type="submit" class="secondary outline small">{{ t("friends_remove") }}</button>
-            </form>
-          </span>
+          <article class="friend-card">
+            <div class="friend-card-profile">
+              <span class="friend-avatar" style="--friend-hue: {{ (row.user.id * 67) % 360 }}">{{ icon("user") }}</span>
+              <div class="friend-card-identity">
+                <a href="/friends/{{ row.user.id }}" class="friend-card-name">{{ row.name }}</a>
+                <span class="friend-card-email">{{ row.user.email }}</span>
+              </div>
+            </div>
+            <div class="friend-card-stats">
+              <span class="friend-stat">{{ icon("building") }}{{ t("friends_count", count=row.applications) }}</span>
+              <span class="friend-stat friend-stat-today">{{ icon("calendar") }}{{ t("friends_today_count", count=row.today_applications) }}</span>
+            </div>
+            <span class="friend-actions">
+              <a href="/friends/{{ row.user.id }}" role="button" class="small">{{ t("friends_open") }}</a>
+              <form method="post" action="/friends/{{ row.friendship_id }}/remove" class="inline-form"
+                    data-confirm-dialog="friend-remove-dialog">
+                {{ csrf() }}<button type="submit" class="danger small friend-remove">{{ t("friends_remove") }}</button>
+              </form>
+            </span>
+          </article>
         </li>
       {% endfor %}
     </ul>
   {% else %}
     <p class="muted">{{ t("friends_none") }}</p>
   {% endif %}
-
-  <form method="post" action="/friends/request" class="friend-add">
-    {{ csrf() }}
-    <label for="friend-email">{{ t("friends_email") }}</label>
-    <fieldset role="group">
-      <input type="email" id="friend-email" name="email" required autocomplete="off" placeholder="friend@example.com">
-      <button type="submit">{{ t("friends_send") }}</button>
-    </fieldset>
-  </form>
 </article>
 
 {% if outgoing %}
   <article>
-    <h3>{{ t("friends_outgoing") }}</h3>
+    <h3 class="section-head"><span class="icon-bubble">{{ icon("clock") }}</span>{{ t("friends_outgoing") }}</h3>
     <ul class="friend-list">
       {% for row in outgoing %}
         <li>
@@ -76,4 +88,17 @@
     </ul>
   </article>
 {% endif %}
+
+<dialog id="friend-remove-dialog" class="confirm-dialog" aria-labelledby="friend-remove-title"
+        aria-describedby="friend-remove-description">
+  <div class="confirm-dialog-heading">
+    <span class="confirm-dialog-icon">{{ icon("alert") }}</span>
+    <h2 id="friend-remove-title">{{ t("friends_remove_title") }}</h2>
+  </div>
+  <p id="friend-remove-description">{{ t("friends_remove_confirm") }}</p>
+  <div class="confirm-dialog-actions">
+    <button type="button" class="secondary outline" data-confirm-cancel>{{ t("cancel") }}</button>
+    <button type="button" class="danger" data-confirm-submit>{{ t("friends_remove") }}</button>
+  </div>
+</dialog>
 {% endblock %}

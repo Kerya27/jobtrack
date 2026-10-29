@@ -1,5 +1,5 @@
 {# Fallback: the user pastes the vacancy text; the server finds the salary and keeps the rest as description. #}
-{% from "macros.html" import csrf with context %}
+{% from "macros.html" import csrf, icon with context %}
 <form method="post" action="/applications/parse-text" hx-post="/applications/parse-text"
       hx-target="#new-form" hx-disabled-elt="#new-form button">
   {{ csrf() }}
@@ -15,7 +15,7 @@
     <small>{{ t("paste_text_hint") }}</small>
   </label>
   <div class="form-actions">
-    <button type="submit">{{ t("paste_text_submit") }}</button>
+    <button type="submit">{{ icon("spark") }}{{ t("paste_text_submit") }}</button>
     <button type="button" class="secondary outline" onclick="document.getElementById('new-form').innerHTML = ''">{{ t("cancel") }}</button>
   </div>
 </form>

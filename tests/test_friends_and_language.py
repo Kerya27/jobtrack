@@ -2,6 +2,7 @@
 
 import re
 import tempfile
+from datetime import timedelta
 from pathlib import Path
 
 from alembic.autogenerate import compare_metadata
@@ -14,6 +15,7 @@ from alembic import command
 from app.db import Base
 from app.i18n import EVENT_TYPE_LABELS, STATUS_LABELS, STRINGS, WORK_MODE_LABELS
 from app.models import Friendship
+from app.timeutil import today_local
 from tests.conftest import ROOT, Client, _logged_in_client
 
 
@@ -32,18 +34,50 @@ def user_id(client: Client) -> int:
 
 def test_friend_request_flow_and_read_only_access(alice: Client, bob: Client) -> None:
     bob_app = bob.create_app(company="Kiwi.com", position="Backend", notes="HR: Jana")
+    bob.create_app(company="Saved", position="Saved role", status="saved")
+    bob.create_app(
+        company="Old",
+        position="Old role",
+        applied_at=(today_local() - timedelta(days=1)).isoformat(),
+    )
     bob_id = user_id(bob)
 
     # before accepting: nothing is visible
     alice.form("/friends/request", {"email": "BOB@example.com "})
     assert alice.get(f"/friends/{bob_id}").status_code == 404
-    assert "Friend requests waiting for you: 1" in bob.get("/").text
+    home = bob.get("/").text
+    assert 'class="icon-btn notification-toggle"' in home and 'class="nav-count"' in home
+    assert 'class="daily-goal' in home
+    assert 'class="daily-goal-divider"> / </span>5' in home
+    assert 'aria-label="Today&#39;s applications: 1 of 5"' in home
+    assert "incoming friend requests" in home
+    assert 'class="flash flash-info"' not in home
+    stats_page = bob.get("/stats").text
+    assert 'class="daily-goal-divider"> / </span>5' in stats_page
+    assert 'class="nav-count"' in stats_page and ">1</span>" in stats_page
+    friends_link_start = stats_page.index('<a href="/friends" class="nav-item')
+    friends_link = stats_page[friends_link_start : stats_page.index("</a>", friends_link_start)]
+    assert 'class="nav-count" aria-hidden="true">1</span>' in friends_link
+    assert "Pending friend requests: 1" in stats_page
 
     incoming = bob.get("/friends").text
+    assert 'class="success small"' in incoming
     friendship_id = int(re.findall(r"/friends/(\d+)/accept", incoming)[0])
     # Alice can't accept her own request on Bob's behalf
     assert alice.form(f"/friends/{friendship_id}/accept").status_code == 404
     bob.form(f"/friends/{friendship_id}/accept")
+    stats_after_accept = bob.get("/stats").text
+    assert 'class="nav-count"' not in stats_after_accept
+    assert 'href="/friends"' in stats_after_accept
+    friends_page = alice.get("/friends").text
+    assert friends_page.index('class="friend-invite"') < friends_page.index('class="friend-cards"')
+    assert 'class="friend-avatar"' in friends_page
+    assert 'id="friend-remove-dialog"' in friends_page
+    assert 'data-confirm-dialog="friend-remove-dialog"' in friends_page
+    assert "Remove this friend?" in friends_page
+    assert "onsubmit=" not in friends_page
+    assert "3 applications" in friends_page
+    assert "Today: 1 sent" in friends_page
 
     tracker = alice.get(f"/friends/{bob_id}").text
     assert "Backend" in tracker and "Kiwi.com" in tracker

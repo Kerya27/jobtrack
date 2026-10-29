@@ -24,13 +24,16 @@ DbSession = Annotated[Session, Depends(get_db)]
 
 
 def get_current_user(request: Request, db: DbSession) -> User | None:
+    request.state.db = db
     user_id = request.session.get(USER_SESSION_KEY)
     if user_id is None:
+        request.state.current_user = None
         return None
     # Reload on every request: a deleted account is logged out immediately.
     user = db.get(User, user_id)
     if user is None:
         request.session.pop(USER_SESSION_KEY, None)
+    request.state.current_user = user
     return user
 
 

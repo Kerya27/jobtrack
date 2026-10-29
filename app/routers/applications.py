@@ -244,7 +244,6 @@ def index(
         context["new_form"] = new_form_context(
             db, user, clone_values(source), message=t("clone_title")
         )
-    context["incoming_requests"] = friends_svc.incoming_count(db, user.id)
     return render(request, "index.html", context)
 
 

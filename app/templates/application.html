@@ -1,19 +1,19 @@
 {% extends "base.html" %}
-{% from "macros.html" import badge, csrf with context %}
+{% from "macros.html" import badge, csrf, icon with context %}
 
 {% block title %}{{ app.position }} — {{ app.company }}{% endblock %}
 
 {% block content %}
-<p><a href="/">{{ t("back_to_list") }}</a></p>
+<p><a class="back-link" href="/">{{ icon("arrow-left") }}{{ t("back_to_list") }}</a></p>
 
 <hgroup class="card-header">
   <h2>{{ app.position }}</h2>
   <p>
-    {{ app.company }}
+    <span>{{ app.company }}</span>
     {{ badge(app.status) }}
     {% if app.archived %}<span class="badge badge-archived">{{ t("archived_badge") }}</span>{% endif %}
-    {% if app.url %}· <a href="{{ app.url }}" target="_blank" rel="noopener noreferrer nofollow">{{ app.source or t("f_url") }} ↗</a>{% endif %}
-    {% if app.portal_url %}· <a href="{{ app.portal_url }}" target="_blank" rel="noopener noreferrer nofollow">{{ t("portal") }} ↗</a>{% endif %}
+    {% if app.url %}<a href="{{ app.url }}" target="_blank" rel="noopener noreferrer nofollow">{{ icon("external") }}{{ app.source or t("f_url") }}</a>{% endif %}
+    {% if app.portal_url %}<a href="{{ app.portal_url }}" target="_blank" rel="noopener noreferrer nofollow">{{ icon("external") }}{{ t("portal") }}</a>{% endif %}
   </p>
 </hgroup>
 
@@ -30,15 +30,15 @@
     {% include "partials/timeline.html" %}
 
     <div class="card-actions">
-      <a href="/?clone={{ app.id }}#new-form" role="button" class="secondary outline">{{ t("clone") }}</a>
+      <a href="/?clone={{ app.id }}#new-form" role="button" class="secondary outline">{{ icon("copy") }}{{ t("clone") }}</a>
       <form method="post" action="/applications/{{ app.id }}/archive">
         {{ csrf() }}
-        <button type="submit" class="secondary outline">{{ t("unarchive") if app.archived else t("archive") }}</button>
+        <button type="submit" class="secondary outline">{{ icon("archive") }}{{ t("unarchive") if app.archived else t("archive") }}</button>
       </form>
       <form method="post" action="/applications/{{ app.id }}/delete"
             onsubmit='return confirm({{ t("delete_confirm")|tojson }})'>
         {{ csrf() }}
-        <button type="submit" class="danger outline">{{ t("delete") }}</button>
+        <button type="submit" class="danger outline">{{ icon("trash") }}{{ t("delete") }}</button>
       </form>
     </div>
   </aside>

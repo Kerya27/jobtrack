@@ -72,9 +72,12 @@ def _filtered(user_id: int, filters: ListFilters) -> Select[tuple[Application]]:
     if filters.resume_version:
         stmt = stmt.where(Application.resume_version == filters.resume_version)
     if filters.sent:
-        since = today_local() - timedelta(days=_SENT_DAYS[filters.sent])
+        today = today_local()
+        since = today - timedelta(days=_SENT_DAYS[filters.sent])
         stmt = stmt.where(
-            Application.applied_at >= since, Application.status != ApplicationStatus.SAVED
+            Application.applied_at >= since,
+            Application.applied_at <= today,
+            Application.status != ApplicationStatus.SAVED,
         )
     return stmt
 

@@ -1,16 +1,16 @@
 {% extends "base.html" %}
-{% from "macros.html" import badge %}
+{% from "macros.html" import badge, icon %}
 {% block title %}{{ app.position }} — {{ app.company }}{% endblock %}
 
 {% block content %}
-<p><a href="/friends/{{ friend.id }}">← {{ t("friend_view_title", name=friend_name) }}</a></p>
+<p><a class="back-link" href="/friends/{{ friend.id }}">{{ icon("arrow-left") }}{{ t("friend_view_title", name=friend_name) }}</a></p>
 
 <hgroup class="card-header">
   <h2>{{ app.position }}</h2>
   <p>
-    {{ app.company }} {{ badge(app.status) }}
+    <span>{{ app.company }}</span> {{ badge(app.status) }}
     {% if app.archived %}<span class="badge badge-archived">{{ t("archived_badge") }}</span>{% endif %}
-    {% if app.url %}· <a href="{{ app.url }}" target="_blank" rel="noopener noreferrer nofollow">{{ app.source or t("f_url") }} ↗</a>{% endif %}
+    {% if app.url %}<a href="{{ app.url }}" target="_blank" rel="noopener noreferrer nofollow">{{ app.source or t("f_url") }}</a>{% endif %}
   </p>
 </hgroup>
 <p class="muted">{{ t("friend_readonly") }}</p>

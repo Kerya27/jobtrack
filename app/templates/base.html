@@ -6,48 +6,97 @@
   <meta name="color-scheme" content="light dark">
   <meta name="csrf-token" content="{{ csrf_token }}">
   <title>{% block title %}{{ t("app_name") }}{% endblock %}</title>
-  <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.1.1/css/pico.min.css"
-        integrity="sha384-L1dWfspMTHU/ApYnFiMz2QID/PlP1xCW9visvBdbEkOLkSSWsP6ZJWhPw6apiXxU"
-        crossorigin="anonymous">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Sora:wght@500;600;700&display=swap">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235b5ce2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='7' width='20' height='14' rx='2'/%3E%3Cpath d='M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2'/%3E%3Cpath d='M12 12v4'/%3E%3Cpath d='M2 12h20'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/static/app.css">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("jt-theme");
+        if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    })();
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.11/dist/htmx.min.js"
           integrity="sha384-2OatzQy1H+Zd/IIrjr1TcuDGqLXeHhbooAyJY1KdQMKnr4LZ22k31GBLdYKHmVjg"
           crossorigin="anonymous" defer></script>
   <script src="/static/app.js" defer></script>
 </head>
-<body hx-headers='{"X-CSRF-Token": "{{ csrf_token }}"}'>
-  <header class="container">
-    <nav>
-      <ul>
-        <li><a href="/" class="brand"><strong>{{ t("app_name") }}</strong></a></li>
-      </ul>
-      <ul>
+<body class="{% block body_class %}{% endblock %}" hx-headers='{"X-CSRF-Token": "{{ csrf_token }}"}'>
+  {% from "macros.html" import icon, csrf with context %}
+  <a class="skip-link" href="#main">{{ t("skip_to_content") }}</a>
+  <header class="site-header">
+    <nav class="site-nav">
+      <div class="brand-group">
+        <a href="/" class="brand">
+          <span class="brand-mark">{{ icon("logo") }}</span>
+          <span class="brand-text">{{ t("app_name") }}</span>
+        </a>
         {% if user %}
-          <li><a href="/">{{ t("nav_applications") }}</a></li>
-          <li><a href="/friends">{{ t("nav_friends") }}</a></li>
-          <li><a href="/stats">{{ t("nav_stats") }}</a></li>
-          <li><a href="/settings">{{ t("nav_settings") }}</a></li>
+          <div class="daily-goal{% if user.daily_goal and daily_sent_count >= user.daily_goal %} is-complete{% endif %}"
+               role="status" aria-label="{% if user.daily_goal %}{{ t('daily_goal_header', count=daily_sent_count, goal=user.daily_goal) }}{% else %}{{ t('daily_goal_header_no_goal', count=daily_sent_count) }}{% endif %}">
+            <span class="daily-goal-icon">{{ icon("target") }}</span>
+            <span class="daily-goal-content">
+              <span class="daily-goal-label">{{ t("daily_goal_label") }}</span>
+              <span class="daily-goal-value">{{ daily_sent_count }}{% if user.daily_goal %}<span class="daily-goal-divider"> / </span>{{ user.daily_goal }}{% endif %}</span>
+              {% if user.daily_goal %}
+                <span class="daily-goal-track" aria-hidden="true">
+                  <span class="daily-goal-fill" style="--daily-progress: {{ [daily_sent_count * 100 / user.daily_goal, 100]|min }}%"></span>
+                </span>
+              {% endif %}
+            </span>
+          </div>
+        {% endif %}
+      </div>
+      <ul class="nav-links">
+        {% if user %}
+          <li><a href="/" class="nav-item{% if request.url.path == '/' %} is-active{% endif %}">{{ icon("list") }}<span>{{ t("nav_applications") }}</span></a></li>
+          <li><a href="/friends" class="nav-item{% if request.url.path.startswith('/friends') %} is-active{% endif %}"{% if incoming_requests %} aria-label="{{ t('friends_pending_count', count=incoming_requests) }}"{% endif %}>{{ icon("users") }}<span>{{ t("nav_friends") }}</span>{% if incoming_requests %}<span class="nav-count" aria-hidden="true">{{ incoming_requests }}</span>{% endif %}</a></li>
+          <li><a href="/stats" class="nav-item{% if request.url.path == '/stats' %} is-active{% endif %}">{{ icon("chart") }}<span>{{ t("nav_stats") }}</span></a></li>
+          <li><a href="/settings" class="nav-item{% if request.url.path.startswith('/settings') %} is-active{% endif %}">{{ icon("settings") }}<span>{{ t("nav_settings") }}</span></a></li>
           <li>
             <form method="post" action="/logout" class="inline-form">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-              <button type="submit" class="link-button">{{ t("nav_logout") }}</button>
+              {{ csrf() }}
+              <button type="submit" class="nav-item link-button">{{ icon("logout") }}<span>{{ t("nav_logout") }}</span></button>
             </form>
           </li>
+        {% elif request.url.path not in ('/login', '/register') %}
+          <li><a href="/login" class="nav-item">{{ t("nav_login") }}</a></li>
         {% endif %}
-        <li>
-          {% set other = "ru" if current_language() == "en" else "en" %}
-          <form method="post" action="/language" class="inline-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <input type="hidden" name="lang" value="{{ other }}">
-            <input type="hidden" name="next" value="{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}">
-            <button type="submit" class="link-button lang-switch" title="{{ t('switch_language') }}: {{ LANGUAGE_NAMES[other] }}" lang="{{ other }}">{{ other|upper }}</button>
-          </form>
-        </li>
       </ul>
+      <div class="nav-tools">
+        <details class="notification-menu">
+          <summary class="icon-btn notification-toggle" title="{{ t('notifications') }}"
+                   aria-label="{{ t('friends_pending_count', count=incoming_requests) if incoming_requests else t('notifications') }}">
+            {{ icon("bell") }}
+            {% if incoming_requests %}<span class="nav-count">{{ incoming_requests }}</span>{% endif %}
+          </summary>
+          <div class="notification-popover">
+            {% if incoming_requests %}
+              <p>{{ t("friends_pending_message", count=incoming_requests) }}</p>
+              <a href="/friends">{{ t("notifications_view_friends") }}</a>
+            {% else %}
+              <p>{{ t("notifications_empty") }}</p>
+            {% endif %}
+          </div>
+        </details>
+        <button type="button" class="icon-btn" data-theme-toggle title="{{ t('theme_toggle') }}" aria-label="{{ t('theme_toggle') }}">
+          <span class="theme-sun">{{ icon("sun") }}</span>
+          <span class="theme-moon">{{ icon("moon") }}</span>
+        </button>
+        {% set other = "ru" if current_language() == "en" else "en" %}
+        <form method="post" action="/language" class="inline-form">
+          {{ csrf() }}
+          <input type="hidden" name="lang" value="{{ other }}">
+          <input type="hidden" name="next" value="{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}">
+          <button type="submit" class="icon-btn lang-switch" title="{{ t('switch_language') }}: {{ LANGUAGE_NAMES[other] }}" lang="{{ other }}">{{ other|upper }}</button>
+        </form>
+      </div>
     </nav>
   </header>
-  <main class="container">
+  <main id="main" class="container">
     {% for f in flashes %}
       <p class="flash flash-{{ f.kind }}" role="status">{{ f.message }}</p>
     {% endfor %}

@@ -5,6 +5,53 @@
 
   // ---------- bulk selection ----------
   var lastClicked = null;
+  var pendingConfirmationForm = null;
+
+  document.addEventListener("submit", function (e) {
+    var form = e.target;
+    if (!(form instanceof HTMLFormElement) || !form.matches("[data-confirm-dialog]")) return;
+    if (form.dataset.confirmed === "true") {
+      delete form.dataset.confirmed;
+      return;
+    }
+
+    var dialog = document.getElementById(form.dataset.confirmDialog);
+    if (typeof HTMLDialogElement === "undefined" || !(dialog instanceof HTMLDialogElement) ||
+        typeof dialog.showModal !== "function") {
+      return;
+    }
+    e.preventDefault();
+    pendingConfirmationForm = form;
+    dialog.showModal();
+  });
+
+  document.addEventListener("click", function (e) {
+    var target = e.target;
+    if (!(target instanceof Element)) return;
+
+    var cancel = target.closest("[data-confirm-cancel]");
+    if (cancel) {
+      var cancelDialog = cancel.closest("dialog");
+      if (cancelDialog && cancelDialog.open) cancelDialog.close();
+      pendingConfirmationForm = null;
+      return;
+    }
+
+    var confirm = target.closest("[data-confirm-submit]");
+    if (!confirm || !pendingConfirmationForm || !pendingConfirmationForm.isConnected) return;
+    var form = pendingConfirmationForm;
+    pendingConfirmationForm = null;
+    form.dataset.confirmed = "true";
+    var confirmDialog = confirm.closest("dialog");
+    if (confirmDialog && confirmDialog.open) confirmDialog.close();
+    form.requestSubmit();
+  });
+
+  document.addEventListener("close", function (e) {
+    if (e.target instanceof HTMLDialogElement && e.target.id === "friend-remove-dialog") {
+      pendingConfirmationForm = null;
+    }
+  }, true);
 
   function rowBoxes() {
     return Array.prototype.slice.call(document.querySelectorAll('input[type="checkbox"][form="bulk"]'));
@@ -27,6 +74,10 @@
   document.addEventListener("click", function (e) {
     var target = e.target;
     if (!(target instanceof Element)) return;
+
+    document.querySelectorAll(".notification-menu[open]").forEach(function (menu) {
+      if (!menu.contains(target)) menu.removeAttribute("open");
+    });
 
     // Shift+click selects a range of rows, like in a mail client.
     if (target.matches('input[type="checkbox"][form="bulk"]')) {
@@ -60,6 +111,15 @@
       sent.value = sent.value === "today" ? "" : "today";
       sent.dispatchEvent(new Event("change", { bubbles: true }));
     }
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    document.querySelectorAll(".notification-menu[open]").forEach(function (menu) {
+      menu.removeAttribute("open");
+      var summary = menu.querySelector("summary");
+      if (summary) summary.focus();
+    });
   });
 
   // "All" also clears the "Today" filter. Capture phase: runs before HTMX reads the form,
@@ -190,6 +250,21 @@
     }
   }
   document.addEventListener("DOMContentLoaded", startCapture);
+
+  // Color theme: stored locally, does not go to the server.
+  function currentTheme() {
+    var stored = null;
+    try { stored = localStorage.getItem("jt-theme"); } catch (e) {}
+    if (stored === "light" || stored === "dark") return stored;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  document.addEventListener("click", function (e) {
+    var btn = e.target instanceof Element ? e.target.closest("[data-theme-toggle]") : null;
+    if (!btn) return;
+    var next = currentTheme() === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem("jt-theme", next); } catch (err) {}
+  });
 
   // If a status change fails, reload so the board never shows a state that wasn't saved.
   document.addEventListener("htmx:responseError", function (e) {

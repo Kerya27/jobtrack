@@ -1,4 +1,5 @@
 {# Status chips with counters and the "Today 3/5" chip. `oob` = true for an out-of-band update. #}
+{% from "macros.html" import icon with context %}
 <div id="status-chips" class="chips" {% if oob %}hx-swap-oob="true"{% endif %}>
   {% if view != "board" %}
     <div class="chips-status" role="radiogroup">
@@ -24,6 +25,7 @@
   <a href="{{ base_url }}?{{ today_toggle_query }}" data-sent-toggle
      class="chip chip-today{% if filters.sent == 'today' %} active{% endif %}{% if daily_goal and today_count >= daily_goal %} done{% endif %}"
      title="{{ t('today_chip_title') }}" {% if filters.sent == 'today' %}aria-current="true"{% endif %}>
+    {{ icon("target") }}
     {% if daily_goal %}{{ t("today_chip", count=today_count, goal=daily_goal) }}{% else %}{{ t("today_chip_no_goal", count=today_count) }}{% endif %}
   </a>
 </div>

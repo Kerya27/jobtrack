@@ -1,4 +1,101 @@
-{# Form helpers: label + input + error message shown right under the field. #}
+{# Form helpers, status badges, icons. Keep field ids and class="app-title" for tests. #}
+
+{% macro icon(name) -%}
+<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+{%- if name == "logo" -%}
+  <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M12 12v4"/><path d="M2 12h20"/>
+{%- elif name == "search" -%}
+  <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+{%- elif name == "link" -%}
+  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+{%- elif name == "clipboard" -%}
+  <rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+{%- elif name == "pen" -%}
+  <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+{%- elif name == "plus" -%}
+  <path d="M12 5v14"/><path d="M5 12h14"/>
+{%- elif name == "list" -%}
+  <path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>
+{%- elif name == "board" -%}
+  <rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="11" rx="1"/>
+{%- elif name == "users" -%}
+  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+{%- elif name == "chart" -%}
+  <path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>
+{%- elif name == "settings" -%}
+  <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.7 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.7a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.3 9c.4.6.9 1 1.6 1h.1a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+{%- elif name == "logout" -%}
+  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>
+{%- elif name == "globe" -%}
+  <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/><path d="M12 2a15 15 0 0 0 0 20"/>
+{%- elif name == "sun" -%}
+  <circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.9 4.9 1.4 1.4"/><path d="m17.7 17.7 1.4 1.4"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m4.9 19.1 1.4-1.4"/><path d="m17.7 6.3 1.4-1.4"/>
+{%- elif name == "moon" -%}
+  <path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5z"/>
+{%- elif name == "filter" -%}
+  <path d="M4 4h16l-6 8v6l-4 2v-8z"/>
+{%- elif name == "archive" -%}
+  <rect x="3" y="3" width="18" height="4" rx="1"/><path d="M5 7v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7"/><path d="M10 12h4"/>
+{%- elif name == "copy" -%}
+  <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+{%- elif name == "trash" -%}
+  <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+{%- elif name == "check" -%}
+  <path d="M20 6 9 17l-5-5"/>
+{%- elif name == "x" -%}
+  <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+{%- elif name == "mail" -%}
+  <rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>
+{%- elif name == "download" -%}
+  <path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>
+{%- elif name == "upload" -%}
+  <path d="M12 21V9"/><path d="m7 14 5-5 5 5"/><path d="M5 3h14"/>
+{%- elif name == "bookmark" -%}
+  <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+{%- elif name == "clock" -%}
+  <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+{%- elif name == "map" -%}
+  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+{%- elif name == "building" -%}
+  <rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/>
+{%- elif name == "coins" -%}
+  <circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.37 18.1"/><path d="M7 6h1v4"/><path d="m16.7 14.3.8.8"/>
+{%- elif name == "external" -%}
+  <path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+{%- elif name == "arrow-left" -%}
+  <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
+{%- elif name == "user-plus" -%}
+  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M16 11h6"/>
+{%- elif name == "user" -%}
+  <path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/>
+{%- elif name == "inbox" -%}
+  <path d="M22 12h-6l-2 3H10l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+{%- elif name == "bell" -%}
+  <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>
+{%- elif name == "target" -%}
+  <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+{%- elif name == "spark" -%}
+  <path d="M12 3v4"/><path d="M12 17v4"/><path d="M3 12h4"/><path d="M17 12h4"/><path d="m5.6 5.6 2.8 2.8"/><path d="m15.6 15.6 2.8 2.8"/><path d="m5.6 18.4 2.8-2.8"/><path d="m15.6 8.4 2.8-2.8"/>
+{%- elif name == "lock" -%}
+  <rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+{%- elif name == "file" -%}
+  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h6"/>
+{%- elif name == "alert" -%}
+  <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>
+{%- elif name == "info" -%}
+  <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+{%- elif name == "check-circle" -%}
+  <circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>
+{%- elif name == "loader" -%}
+  <path d="M12 2v4"/><path d="M12 18v4"/><path d="m4.9 4.9 2.8 2.8"/><path d="m16.3 16.3 2.8 2.8"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="m4.9 19.1 2.8-2.8"/><path d="m16.3 7.7 2.8-2.8"/>
+{%- elif name == "calendar" -%}
+  <rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M3 11h18"/>
+{%- else -%}
+  <circle cx="12" cy="12" r="9"/>
+{%- endif -%}
+</svg>
+{%- endmacro %}
 
 {% macro input(name, label, values, errors, type="text", required=false, placeholder="", extra="") -%}
 <label>
@@ -30,12 +127,19 @@
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 {%- endmacro %}
 
+{% macro company_mark(name) -%}
+{% set letter = (name or "?")[:1]|upper %}
+{% set ns = namespace(h=letter|length * 41) %}
+{% for ch in name or "" %}{% set ns.h = ns.h + loop.index * 19 %}{% endfor %}
+<span class="company-mark" style="--h: {{ ns.h % 360 }}" aria-hidden="true">{{ letter }}</span>
+{%- endmacro %}
+
 {# Salary, source, portal link and "a friend applied here too" for list rows and board cards. #}
 {% macro app_meta(app) -%}
 {% set salary = format_salary(app.salary_min, app.salary_max, app.salary_currency) %}
-{% if salary %}<span>{{ salary }}</span>{% endif %}
-{% if app.source %}<span>{{ app.source }}</span>{% endif %}
-{% if app.portal_url %}<a href="{{ app.portal_url }}" class="portal-link" target="_blank" rel="noopener noreferrer nofollow">{{ t("portal") }} ↗</a>{% endif %}
+{% if salary %}<span class="meta-pill">{{ icon("coins") }}{{ salary }}</span>{% endif %}
+{% if app.source %}<span class="meta-pill">{{ icon("inbox") }}{{ app.source }}</span>{% endif %}
+{% if app.portal_url %}<a href="{{ app.portal_url }}" class="portal-link" target="_blank" rel="noopener noreferrer nofollow">{{ icon("external") }}{{ t("portal") }}</a>{% endif %}
 {% set names = friend_companies.get(normalize_company(app.company)) if friend_companies else none %}
-{% if names %}<span class="friend-badge">{{ t("friend_applied", names=names|join(", ")) }}</span>{% endif %}
+{% if names %}<span class="friend-badge">{{ icon("users") }}{{ t("friend_applied", names=names|join(", ")) }}</span>{% endif %}
 {%- endmacro %}

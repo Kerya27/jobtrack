@@ -1,7 +1,8 @@
 {# Full-page wrapper for the "new application" form, used when the request was not made by HTMX. #}
 {% extends "base.html" %}
+{% from "macros.html" import icon with context %}
 {% block content %}
-<p><a href="/">{{ t("back_to_list") }}</a></p>
+<p><a class="back-link" href="/">{{ icon("arrow-left") }}{{ t("back_to_list") }}</a></p>
 <article>
   <h2>{{ t("quick_add_title") }}</h2>
   <div id="new-form">{% include "partials/app_form.html" %}</div>
