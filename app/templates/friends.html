@@ -6,6 +6,18 @@
 <h2 class="page-title">{{ t("friends_title") }}</h2>
 <p class="muted">{{ t("friends_intro") }}</p>
 
+<article class="friend-invite">
+  <h3 class="section-head"><span class="icon-bubble">{{ icon("user-plus") }}</span>{{ t("friends_add") }}</h3>
+  <form method="post" action="/friends/request" class="friend-add">
+    {{ csrf() }}
+    <label for="friend-email">{{ t("friends_email") }}</label>
+    <fieldset role="group">
+      <input type="email" id="friend-email" name="email" required autocomplete="off" placeholder="friend@example.com">
+      <button type="submit">{{ icon("user-plus") }}{{ t("friends_send") }}</button>
+    </fieldset>
+  </form>
+</article>
+
 {% if incoming %}
   <article>
     <h3 class="section-head"><span class="icon-bubble">{{ icon("inbox") }}</span>{{ t("friends_incoming") }}</h3>
@@ -30,35 +42,35 @@
 <article>
   <h3 class="section-head"><span class="icon-bubble">{{ icon("users") }}</span>{{ t("friends_list") }}</h3>
   {% if friends %}
-    <ul class="friend-list">
+    <ul class="friend-cards">
       {% for row in friends %}
         <li>
-          <span>
-            <a href="/friends/{{ row.user.id }}" class="friend-email">{{ row.user.email }}</a>
-            <small class="muted">{{ t("friends_count", count=row.applications) }}</small>
-          </span>
-          <span class="friend-actions">
-            <a href="/friends/{{ row.user.id }}" role="button" class="small">{{ t("friends_open") }}</a>
-            <form method="post" action="/friends/{{ row.friendship_id }}/remove" class="inline-form"
-                  onsubmit='return confirm({{ t("friends_remove_confirm")|tojson }})'>
-              {{ csrf() }}<button type="submit" class="danger small friend-remove">{{ t("friends_remove") }}</button>
-            </form>
-          </span>
+          <article class="friend-card">
+            <div class="friend-card-profile">
+              <span class="friend-avatar" style="--friend-hue: {{ (row.user.id * 67) % 360 }}">{{ icon("user") }}</span>
+              <div class="friend-card-identity">
+                <a href="/friends/{{ row.user.id }}" class="friend-card-name">{{ row.name }}</a>
+                <span class="friend-card-email">{{ row.user.email }}</span>
+              </div>
+            </div>
+            <div class="friend-card-stats">
+              <span class="friend-stat">{{ icon("building") }}{{ t("friends_count", count=row.applications) }}</span>
+              <span class="friend-stat friend-stat-today">{{ icon("calendar") }}{{ t("friends_today_count", count=row.today_applications) }}</span>
+            </div>
+            <span class="friend-actions">
+              <a href="/friends/{{ row.user.id }}" role="button" class="small">{{ t("friends_open") }}</a>
+              <form method="post" action="/friends/{{ row.friendship_id }}/remove" class="inline-form"
+                    onsubmit='return confirm({{ t("friends_remove_confirm")|tojson }})'>
+                {{ csrf() }}<button type="submit" class="danger small friend-remove">{{ t("friends_remove") }}</button>
+              </form>
+            </span>
+          </article>
         </li>
       {% endfor %}
     </ul>
   {% else %}
     <p class="muted">{{ t("friends_none") }}</p>
   {% endif %}
-
-  <form method="post" action="/friends/request" class="friend-add">
-    {{ csrf() }}
-    <label for="friend-email">{{ t("friends_email") }}</label>
-    <fieldset role="group">
-      <input type="email" id="friend-email" name="email" required autocomplete="off" placeholder="friend@example.com">
-      <button type="submit">{{ icon("user-plus") }}{{ t("friends_send") }}</button>
-    </fieldset>
-  </form>
 </article>
 
 {% if outgoing %}

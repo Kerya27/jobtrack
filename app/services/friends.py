@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Application, ApplicationStatus, Friendship, FriendshipStatus, User
 from app.services.applications import NotFoundError, normalize_company
+from app.timeutil import today_local
 
 
 class RequestOutcome(StrEnum):
@@ -29,6 +30,11 @@ class FriendRow:
     friendship_id: int
     user: User
     applications: int = 0
+    today_applications: int = 0
+
+    @property
+    def name(self) -> str:
+        return display_name(self.user)
 
 
 def display_name(user: User) -> str:
@@ -134,14 +140,34 @@ def friends(db: Session, user_id: int) -> list[FriendRow]:
     rows = _with_users(db, user_id, status=FriendshipStatus.ACCEPTED, incoming=None)
     if not rows:
         return []
+    friend_user_ids = [r.user.id for r in rows]
     counts = dict(
         db.execute(
             select(Application.user_id, func.count())
-            .where(Application.user_id.in_([r.user.id for r in rows]))
+            .where(Application.user_id.in_(friend_user_ids))
             .group_by(Application.user_id)
         ).all()
     )
-    rows = [FriendRow(r.friendship_id, r.user, counts.get(r.user.id, 0)) for r in rows]
+    today_counts = dict(
+        db.execute(
+            select(Application.user_id, func.count())
+            .where(
+                Application.user_id.in_(friend_user_ids),
+                Application.applied_at == today_local(),
+                Application.status != ApplicationStatus.SAVED,
+            )
+            .group_by(Application.user_id)
+        ).all()
+    )
+    rows = [
+        FriendRow(
+            r.friendship_id,
+            r.user,
+            counts.get(r.user.id, 0),
+            today_counts.get(r.user.id, 0),
+        )
+        for r in rows
+    ]
     return sorted(rows, key=lambda r: r.user.email)
 
 

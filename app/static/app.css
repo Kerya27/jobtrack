@@ -876,6 +876,60 @@ tbody tr:hover { background: var(--surface-2); }
 .friend-list li:last-child { border-bottom: 0; }
 .friend-email { font-weight: 650; overflow-wrap: anywhere; margin-right: 0.5rem; }
 .friend-actions { display: inline-flex; gap: 0.5rem; align-items: center; }
+.friend-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  gap: 0.85rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.friend-cards > li { min-width: 0; list-style: none; }
+.friend-card {
+  display: grid;
+  gap: 0.9rem;
+  height: 100%;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
+}
+.friend-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.friend-card-profile { display: flex; align-items: center; gap: 0.8rem; min-width: 0; }
+.friend-avatar {
+  display: grid;
+  flex: 0 0 3rem;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border: 1px solid hsl(var(--friend-hue) 65% 58% / 25%);
+  border-radius: 50%;
+  background: linear-gradient(145deg, hsl(var(--friend-hue) 72% 68%), hsl(var(--friend-hue) 62% 48%));
+  color: #fff;
+  box-shadow: 0 5px 14px hsl(var(--friend-hue) 60% 45% / 22%);
+}
+.friend-avatar .icon { width: 1.35rem; height: 1.35rem; }
+.friend-card-identity { display: grid; min-width: 0; gap: 0.15rem; }
+.friend-card-name { color: var(--ink); font-weight: 700; overflow-wrap: anywhere; text-decoration: none; }
+.friend-card-name:hover { color: var(--primary); }
+.friend-card-email { color: var(--muted); font-size: 0.84rem; overflow-wrap: anywhere; }
+.friend-card-stats { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.friend-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.34rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+.friend-stat .icon { width: 0.9rem; height: 0.9rem; }
+.friend-stat-today { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 28%, var(--line)); background: var(--primary-soft); }
+.friend-card .friend-actions { margin-top: auto; }
 .friend-actions > a[role="button"].small,
 .friend-actions > form > button.small {
   width: 9rem;
@@ -894,7 +948,9 @@ tbody tr:hover { background: var(--surface-2); }
   border-color: color-mix(in srgb, var(--danger) 85%, black);
   color: #fff;
 }
-.friend-add { margin-top: 1rem; }
+.friend-add { margin: 0; }
+.friend-add fieldset[role="group"] { margin-bottom: 0; }
+.friend-invite { margin-bottom: 1rem; }
 .readonly-fields { display: grid; grid-template-columns: max-content 1fr; gap: 0.3rem 1rem; }
 .readonly-fields dt { color: var(--muted); }
 .readonly-fields dd { margin: 0; overflow-wrap: anywhere; }
@@ -945,6 +1001,19 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: brightness(0); }
   .nav-item span { display: none; }
   .nav-item .nav-count { display: inline-flex; }
   .nav-item { padding: 0.45rem; }
+}
+
+@media (max-width: 480px) {
+  .friend-card .friend-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+  .friend-card .friend-actions > a[role="button"].small,
+  .friend-card .friend-actions > form > button.small {
+    width: 100%;
+    min-width: 0;
+  }
 }
 
 @media (max-width: 576px) {
