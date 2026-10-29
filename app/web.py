@@ -17,7 +17,13 @@ from app.i18n import (
 )
 from app.models import ApplicationStatus, Event, EventType, WorkMode
 from app.security import get_csrf_token
-from app.services.applications import SENT_PERIODS, SORT_ORDERS, normalize_company
+from app.services.applications import (
+    SENT_PERIODS,
+    SORT_ORDERS,
+    ListFilters,
+    normalize_company,
+    sent_today_count,
+)
 from app.services.friends import incoming_count
 from app.timeutil import format_date, format_datetime
 
@@ -98,6 +104,9 @@ def render(
         "csrf_token": get_csrf_token(request),
         "flashes": pop_flashes(request) if not is_partial else [],
         "incoming_requests": incoming_count(db, user.id) if db is not None and user else 0,
+        "daily_sent_count": sent_today_count(db, user.id, ListFilters())
+        if db is not None and user
+        else 0,
     }
     ctx.update(context or {})
     return templates.TemplateResponse(request, name, ctx, status_code=status_code)

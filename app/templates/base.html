@@ -29,14 +29,31 @@
   <a class="skip-link" href="#main">{{ t("skip_to_content") }}</a>
   <header class="site-header">
     <nav class="site-nav">
-      <a href="/" class="brand">
-        <span class="brand-mark">{{ icon("logo") }}</span>
-        <span class="brand-text">{{ t("app_name") }}</span>
-      </a>
+      <div class="brand-group">
+        <a href="/" class="brand">
+          <span class="brand-mark">{{ icon("logo") }}</span>
+          <span class="brand-text">{{ t("app_name") }}</span>
+        </a>
+        {% if user %}
+          <div class="daily-goal{% if user.daily_goal and daily_sent_count >= user.daily_goal %} is-complete{% endif %}"
+               role="status" aria-label="{% if user.daily_goal %}{{ t('daily_goal_header', count=daily_sent_count, goal=user.daily_goal) }}{% else %}{{ t('daily_goal_header_no_goal', count=daily_sent_count) }}{% endif %}">
+            <span class="daily-goal-icon">{{ icon("target") }}</span>
+            <span class="daily-goal-content">
+              <span class="daily-goal-label">{{ t("daily_goal_label") }}</span>
+              <span class="daily-goal-value">{{ daily_sent_count }}{% if user.daily_goal %}<span class="daily-goal-divider"> / </span>{{ user.daily_goal }}{% endif %}</span>
+              {% if user.daily_goal %}
+                <span class="daily-goal-track" aria-hidden="true">
+                  <span class="daily-goal-fill" style="--daily-progress: {{ [daily_sent_count * 100 / user.daily_goal, 100]|min }}%"></span>
+                </span>
+              {% endif %}
+            </span>
+          </div>
+        {% endif %}
+      </div>
       <ul class="nav-links">
         {% if user %}
           <li><a href="/" class="nav-item{% if request.url.path == '/' %} is-active{% endif %}">{{ icon("list") }}<span>{{ t("nav_applications") }}</span></a></li>
-          <li><a href="/friends" class="nav-item{% if request.url.path.startswith('/friends') %} is-active{% endif %}">{{ icon("users") }}<span>{{ t("nav_friends") }}</span></a></li>
+          <li><a href="/friends" class="nav-item{% if request.url.path.startswith('/friends') %} is-active{% endif %}"{% if incoming_requests %} aria-label="{{ t('friends_pending_count', count=incoming_requests) }}"{% endif %}>{{ icon("users") }}<span>{{ t("nav_friends") }}</span>{% if incoming_requests %}<span class="nav-count" aria-hidden="true">{{ incoming_requests }}</span>{% endif %}</a></li>
           <li><a href="/stats" class="nav-item{% if request.url.path == '/stats' %} is-active{% endif %}">{{ icon("chart") }}<span>{{ t("nav_stats") }}</span></a></li>
           <li><a href="/settings" class="nav-item{% if request.url.path.startswith('/settings') %} is-active{% endif %}">{{ icon("settings") }}<span>{{ t("nav_settings") }}</span></a></li>
           <li>

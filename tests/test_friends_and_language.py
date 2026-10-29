@@ -45,10 +45,17 @@ def test_friend_request_flow_and_read_only_access(alice: Client, bob: Client) ->
     assert alice.get(f"/friends/{bob_id}").status_code == 404
     home = bob.get("/").text
     assert 'class="icon-btn notification-toggle"' in home and 'class="nav-count"' in home
+    assert 'class="daily-goal' in home
+    assert 'class="daily-goal-divider"> / </span>5' in home
+    assert 'aria-label="Today&#39;s applications: 1 of 5"' in home
     assert "incoming friend requests" in home
     assert 'class="flash flash-info"' not in home
     stats_page = bob.get("/stats").text
+    assert 'class="daily-goal-divider"> / </span>5' in stats_page
     assert 'class="nav-count"' in stats_page and ">1</span>" in stats_page
+    friends_link_start = stats_page.index('<a href="/friends" class="nav-item')
+    friends_link = stats_page[friends_link_start : stats_page.index("</a>", friends_link_start)]
+    assert 'class="nav-count" aria-hidden="true">1</span>' in friends_link
     assert "Pending friend requests: 1" in stats_page
 
     incoming = bob.get("/friends").text
@@ -57,10 +64,16 @@ def test_friend_request_flow_and_read_only_access(alice: Client, bob: Client) ->
     # Alice can't accept her own request on Bob's behalf
     assert alice.form(f"/friends/{friendship_id}/accept").status_code == 404
     bob.form(f"/friends/{friendship_id}/accept")
-    assert 'class="nav-count"' not in bob.get("/stats").text
+    stats_after_accept = bob.get("/stats").text
+    assert 'class="nav-count"' not in stats_after_accept
+    assert 'href="/friends"' in stats_after_accept
     friends_page = alice.get("/friends").text
     assert friends_page.index('class="friend-invite"') < friends_page.index('class="friend-cards"')
     assert 'class="friend-avatar"' in friends_page
+    assert 'id="friend-remove-dialog"' in friends_page
+    assert 'data-confirm-dialog="friend-remove-dialog"' in friends_page
+    assert "Remove this friend?" in friends_page
+    assert "onsubmit=" not in friends_page
     assert "3 applications" in friends_page
     assert "Today: 1 sent" in friends_page
 

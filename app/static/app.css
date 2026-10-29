@@ -168,6 +168,78 @@ main.container { padding-top: 1.25rem; }
   letter-spacing: -0.03em;
 }
 .brand:hover { text-decoration: none; color: var(--primary); }
+.brand-group {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+.daily-goal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 7.3rem;
+  padding: 0.38rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--line));
+  border-radius: 13px;
+  background: linear-gradient(135deg, var(--primary-soft), color-mix(in srgb, var(--surface) 88%, var(--primary)));
+  color: var(--ink);
+}
+.daily-goal-icon {
+  display: grid;
+  flex: 0 0 1.8rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--primary);
+}
+.daily-goal-icon .icon { width: 1rem; height: 1rem; }
+.daily-goal-content {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 0.35rem;
+  line-height: 1;
+}
+.daily-goal-label {
+  color: var(--muted);
+  font-size: 0.56rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+}
+.daily-goal-value {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.daily-goal-divider { color: var(--muted); font-weight: 500; }
+.daily-goal-track {
+  grid-column: 1 / -1;
+  height: 3px;
+  margin-top: 0.32rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 15%, var(--surface));
+}
+.daily-goal-fill {
+  display: block;
+  width: var(--daily-progress);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+  transition: width 0.35s var(--ease);
+}
+.daily-goal.is-complete {
+  border-color: color-mix(in srgb, var(--ok) 38%, var(--line));
+  background: color-mix(in srgb, var(--ok) 10%, var(--surface));
+}
+.daily-goal.is-complete .daily-goal-icon { color: var(--ok); }
+.daily-goal.is-complete .daily-goal-fill { background: var(--ok); }
 .brand-mark {
   width: 2.15rem;
   height: 2.15rem;
@@ -951,6 +1023,53 @@ tbody tr:hover { background: var(--surface-2); }
 .friend-add { margin: 0; }
 .friend-add fieldset[role="group"] { margin-bottom: 0; }
 .friend-invite { margin-bottom: 1rem; }
+.confirm-dialog {
+  width: min(30rem, calc(100vw - 2rem));
+  max-width: none;
+  margin: auto;
+  padding: 1.35rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-md);
+}
+.confirm-dialog::backdrop {
+  background: rgb(12 11 20 / 0.55);
+  backdrop-filter: blur(4px);
+}
+.confirm-dialog-heading { display: flex; align-items: center; gap: 0.8rem; }
+.confirm-dialog-heading h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+.confirm-dialog-icon {
+  display: grid;
+  flex: 0 0 2.6rem;
+  width: 2.6rem;
+  height: 2.6rem;
+  place-items: center;
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--danger) 14%, var(--surface));
+  color: var(--danger);
+}
+.confirm-dialog > p { margin: 1rem 0 1.25rem; color: var(--muted); }
+.confirm-dialog-actions { display: flex; justify-content: flex-end; gap: 0.6rem; }
+.confirm-dialog-actions button:not(.nav-item):not(.icon-btn):not(.link-button) {
+  width: auto;
+  min-width: 7rem;
+}
+.confirm-dialog-actions button.danger:not(.nav-item):not(.icon-btn):not(.link-button) {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+.confirm-dialog-actions button.danger:not(.nav-item):not(.icon-btn):not(.link-button):hover {
+  background: color-mix(in srgb, var(--danger) 85%, black);
+  border-color: color-mix(in srgb, var(--danger) 85%, black);
+}
 .readonly-fields { display: grid; grid-template-columns: max-content 1fr; gap: 0.3rem 1rem; }
 .readonly-fields dt { color: var(--muted); }
 .readonly-fields dd { margin: 0; overflow-wrap: anywhere; }
@@ -1004,6 +1123,11 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: brightness(0); }
 }
 
 @media (max-width: 480px) {
+  .confirm-dialog { padding: 1.1rem; }
+  .confirm-dialog-actions button:not(.nav-item):not(.icon-btn):not(.link-button) {
+    min-width: 0;
+    flex: 1;
+  }
   .friend-card .friend-actions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1019,6 +1143,15 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: brightness(0); }
 @media (max-width: 576px) {
   .site-nav { flex-wrap: wrap; padding: 0.4rem 0; }
   .nav-links { margin-left: 0; width: 100%; order: 3; }
+}
+
+@media (max-width: 400px) {
+  .brand-group { gap: 0.45rem; }
+  .brand-group .brand { gap: 0.4rem; font-size: 1rem; }
+  .brand-mark { width: 1.9rem; height: 1.9rem; }
+  .daily-goal { min-width: 0; padding: 0.32rem 0.45rem; gap: 0.35rem; }
+  .daily-goal-icon { width: 1.55rem; height: 1.55rem; flex-basis: 1.55rem; }
+  .daily-goal-label { font-size: 0.5rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

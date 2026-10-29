@@ -60,7 +60,7 @@
             <span class="friend-actions">
               <a href="/friends/{{ row.user.id }}" role="button" class="small">{{ t("friends_open") }}</a>
               <form method="post" action="/friends/{{ row.friendship_id }}/remove" class="inline-form"
-                    onsubmit='return confirm({{ t("friends_remove_confirm")|tojson }})'>
+                    data-confirm-dialog="friend-remove-dialog">
                 {{ csrf() }}<button type="submit" class="danger small friend-remove">{{ t("friends_remove") }}</button>
               </form>
             </span>
@@ -88,4 +88,17 @@
     </ul>
   </article>
 {% endif %}
+
+<dialog id="friend-remove-dialog" class="confirm-dialog" aria-labelledby="friend-remove-title"
+        aria-describedby="friend-remove-description">
+  <div class="confirm-dialog-heading">
+    <span class="confirm-dialog-icon">{{ icon("alert") }}</span>
+    <h2 id="friend-remove-title">{{ t("friends_remove_title") }}</h2>
+  </div>
+  <p id="friend-remove-description">{{ t("friends_remove_confirm") }}</p>
+  <div class="confirm-dialog-actions">
+    <button type="button" class="secondary outline" data-confirm-cancel>{{ t("cancel") }}</button>
+    <button type="button" class="danger" data-confirm-submit>{{ t("friends_remove") }}</button>
+  </div>
+</dialog>
 {% endblock %}

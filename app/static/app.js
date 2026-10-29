@@ -5,6 +5,53 @@
 
   // ---------- bulk selection ----------
   var lastClicked = null;
+  var pendingConfirmationForm = null;
+
+  document.addEventListener("submit", function (e) {
+    var form = e.target;
+    if (!(form instanceof HTMLFormElement) || !form.matches("[data-confirm-dialog]")) return;
+    if (form.dataset.confirmed === "true") {
+      delete form.dataset.confirmed;
+      return;
+    }
+
+    var dialog = document.getElementById(form.dataset.confirmDialog);
+    if (typeof HTMLDialogElement === "undefined" || !(dialog instanceof HTMLDialogElement) ||
+        typeof dialog.showModal !== "function") {
+      return;
+    }
+    e.preventDefault();
+    pendingConfirmationForm = form;
+    dialog.showModal();
+  });
+
+  document.addEventListener("click", function (e) {
+    var target = e.target;
+    if (!(target instanceof Element)) return;
+
+    var cancel = target.closest("[data-confirm-cancel]");
+    if (cancel) {
+      var cancelDialog = cancel.closest("dialog");
+      if (cancelDialog && cancelDialog.open) cancelDialog.close();
+      pendingConfirmationForm = null;
+      return;
+    }
+
+    var confirm = target.closest("[data-confirm-submit]");
+    if (!confirm || !pendingConfirmationForm || !pendingConfirmationForm.isConnected) return;
+    var form = pendingConfirmationForm;
+    pendingConfirmationForm = null;
+    form.dataset.confirmed = "true";
+    var confirmDialog = confirm.closest("dialog");
+    if (confirmDialog && confirmDialog.open) confirmDialog.close();
+    form.requestSubmit();
+  });
+
+  document.addEventListener("close", function (e) {
+    if (e.target instanceof HTMLDialogElement && e.target.id === "friend-remove-dialog") {
+      pendingConfirmationForm = null;
+    }
+  }, true);
 
   function rowBoxes() {
     return Array.prototype.slice.call(document.querySelectorAll('input[type="checkbox"][form="bulk"]'));
