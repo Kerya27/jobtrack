@@ -62,6 +62,16 @@
     }
   });
 
+  // "All" also clears the "Today" filter. Capture phase: runs before HTMX reads the form,
+  // so the select in the Filters panel stays in sync with what the server gets.
+  document.addEventListener("change", function (e) {
+    var target = e.target;
+    var sent = document.getElementById("f-sent");
+    if (target instanceof Element && target.matches("[data-all-chip]") && sent && sent.value === "today") {
+      sent.value = "";
+    }
+  }, true);
+
   document.addEventListener("htmx:afterSwap", updateBulk);
   document.addEventListener("htmx:afterRequest", function (e) {
     var form = e.detail && e.detail.elt;

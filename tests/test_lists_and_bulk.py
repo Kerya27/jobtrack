@@ -198,3 +198,17 @@ def test_clone_prefills_form_without_link_and_date(alice: Client, bob: Client) -
     assert 'value="Support (live chat)"' in page and 'value="1350"' in page
     assert 'value="https://cybercare.cc/jobs/1"' not in page
     assert bob.get(f"/?clone={source['id']}").status_code == 404
+
+
+def test_all_chip_leaves_the_today_view(alice: Client) -> None:
+    """Bug: with "Today" on, "All" stayed selected, so clicking it did nothing."""
+    alice.create_app(position="Today")
+    alice.create_app(position="Old", applied_at=(today_local() - timedelta(days=3)).isoformat())
+    today = alice.get("/?sent=today", headers=HTMX_RESULTS).text
+    all_chip = today.split("data-all-chip")[1].split(">")[0]
+    assert "checked" not in all_chip
+    assert """hx-vals='{"sent": ""}'""" in all_chip
+    # what the chip sends: the filters form still says sent=today, hx-vals overrides it
+    assert set(titles(alice.get("/?sent=", headers=HTMX_RESULTS).text)) == {"Today", "Old"}
+    normal = alice.get("/", headers=HTMX_RESULTS).text.split("data-all-chip")[1].split(">")[0]
+    assert "checked" in normal and "hx-vals" not in normal

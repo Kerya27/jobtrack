@@ -3,7 +3,10 @@
   {% if view != "board" %}
     <div class="chips-status" role="radiogroup">
       <label class="chip">
-        <input type="radio" name="status" value="" {% if not filters.status %}checked{% endif %}
+        {# "All" means everything: it also drops the "Today" filter, and isn't lit while Today is on. #}
+        <input type="radio" name="status" value="" data-all-chip
+               {% if not filters.status and filters.sent != "today" %}checked{% endif %}
+               {% if filters.sent == "today" %}hx-vals='{"sent": ""}'{% endif %}
                hx-get="{{ base_url }}" hx-target="#results" hx-include="#filters" hx-trigger="change">
         {{ t("all") }} <span class="count">{{ count_all }}</span>
       </label>
