@@ -15,7 +15,7 @@
           <span class="friend-email">{{ row.user.email }}</span>
           <span class="friend-actions">
             <form method="post" action="/friends/{{ row.friendship_id }}/accept" class="inline-form">
-              {{ csrf() }}<button type="submit" class="small">{{ icon("check") }}{{ t("friends_accept") }}</button>
+              {{ csrf() }}<button type="submit" class="success small">{{ icon("check") }}{{ t("friends_accept") }}</button>
             </form>
             <form method="post" action="/friends/{{ row.friendship_id }}/remove" class="inline-form">
               {{ csrf() }}<button type="submit" class="secondary outline small">{{ icon("x") }}{{ t("friends_decline") }}</button>
@@ -41,7 +41,7 @@
             <a href="/friends/{{ row.user.id }}" role="button" class="small">{{ t("friends_open") }}</a>
             <form method="post" action="/friends/{{ row.friendship_id }}/remove" class="inline-form"
                   onsubmit='return confirm({{ t("friends_remove_confirm")|tojson }})'>
-              {{ csrf() }}<button type="submit" class="secondary outline small">{{ t("friends_remove") }}</button>
+              {{ csrf() }}<button type="submit" class="danger small friend-remove">{{ t("friends_remove") }}</button>
             </form>
           </span>
         </li>

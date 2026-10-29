@@ -50,6 +50,21 @@
         {% endif %}
       </ul>
       <div class="nav-tools">
+        <details class="notification-menu">
+          <summary class="icon-btn notification-toggle" title="{{ t('notifications') }}"
+                   aria-label="{{ t('friends_pending_count', count=incoming_requests) if incoming_requests else t('notifications') }}">
+            {{ icon("bell") }}
+            {% if incoming_requests %}<span class="nav-count">{{ incoming_requests }}</span>{% endif %}
+          </summary>
+          <div class="notification-popover">
+            {% if incoming_requests %}
+              <p>{{ t("friends_pending_message", count=incoming_requests) }}</p>
+              <a href="/friends">{{ t("notifications_view_friends") }}</a>
+            {% else %}
+              <p>{{ t("notifications_empty") }}</p>
+            {% endif %}
+          </div>
+        </details>
         <button type="button" class="icon-btn" data-theme-toggle title="{{ t('theme_toggle') }}" aria-label="{{ t('theme_toggle') }}">
           <span class="theme-sun">{{ icon("sun") }}</span>
           <span class="theme-moon">{{ icon("moon") }}</span>

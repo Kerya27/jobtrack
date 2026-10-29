@@ -9,11 +9,11 @@
 <hgroup class="card-header">
   <h2>{{ app.position }}</h2>
   <p>
-    {{ app.company }}
+    <span>{{ app.company }}</span>
     {{ badge(app.status) }}
     {% if app.archived %}<span class="badge badge-archived">{{ t("archived_badge") }}</span>{% endif %}
-    {% if app.url %}· <a href="{{ app.url }}" target="_blank" rel="noopener noreferrer nofollow">{{ icon("external") }}{{ app.source or t("f_url") }}</a>{% endif %}
-    {% if app.portal_url %}· <a href="{{ app.portal_url }}" target="_blank" rel="noopener noreferrer nofollow">{{ icon("external") }}{{ t("portal") }}</a>{% endif %}
+    {% if app.url %}<a href="{{ app.url }}" target="_blank" rel="noopener noreferrer nofollow">{{ icon("external") }}{{ app.source or t("f_url") }}</a>{% endif %}
+    {% if app.portal_url %}<a href="{{ app.portal_url }}" target="_blank" rel="noopener noreferrer nofollow">{{ icon("external") }}{{ t("portal") }}</a>{% endif %}
   </p>
 </hgroup>
 

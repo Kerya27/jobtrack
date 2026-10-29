@@ -18,6 +18,7 @@ from app.i18n import (
 from app.models import ApplicationStatus, Event, EventType, WorkMode
 from app.security import get_csrf_token
 from app.services.applications import SENT_PERIODS, SORT_ORDERS, normalize_company
+from app.services.friends import incoming_count
 from app.timeutil import format_date, format_datetime
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
@@ -90,9 +91,13 @@ def is_htmx(request: Request) -> bool:
 def render(
     request: Request, name: str, context: dict[str, Any] | None = None, status_code: int = 200
 ) -> HTMLResponse:
+    is_partial = name.startswith("partials/")
+    user = (context or {}).get("user") or getattr(request.state, "current_user", None)
+    db = getattr(request.state, "db", None)
     ctx: dict[str, Any] = {
         "csrf_token": get_csrf_token(request),
-        "flashes": pop_flashes(request) if not name.startswith("partials/") else [],
+        "flashes": pop_flashes(request) if not is_partial else [],
+        "incoming_requests": incoming_count(db, user.id) if db is not None and user else 0,
     }
     ctx.update(context or {})
     return templates.TemplateResponse(request, name, ctx, status_code=status_code)

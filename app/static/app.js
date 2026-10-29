@@ -28,6 +28,10 @@
     var target = e.target;
     if (!(target instanceof Element)) return;
 
+    document.querySelectorAll(".notification-menu[open]").forEach(function (menu) {
+      if (!menu.contains(target)) menu.removeAttribute("open");
+    });
+
     // Shift+click selects a range of rows, like in a mail client.
     if (target.matches('input[type="checkbox"][form="bulk"]')) {
       var boxes = rowBoxes();
@@ -60,6 +64,15 @@
       sent.value = sent.value === "today" ? "" : "today";
       sent.dispatchEvent(new Event("change", { bubbles: true }));
     }
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    document.querySelectorAll(".notification-menu[open]").forEach(function (menu) {
+      menu.removeAttribute("open");
+      var summary = menu.querySelector("summary");
+      if (summary) summary.focus();
+    });
   });
 
   // "All" also clears the "Today" filter. Capture phase: runs before HTMX reads the form,

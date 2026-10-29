@@ -2,10 +2,6 @@
 {% from "macros.html" import csrf, icon with context %}
 
 {% block content %}
-{% if incoming_requests %}
-  <p class="flash flash-info" role="status"><a href="/friends">{{ t("friends_incoming_notice", count=incoming_requests) }}</a></p>
-{% endif %}
-
 <article class="quick-add">
   <div class="quick-head">
     <div>

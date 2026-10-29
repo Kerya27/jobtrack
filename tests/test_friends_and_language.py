@@ -37,13 +37,21 @@ def test_friend_request_flow_and_read_only_access(alice: Client, bob: Client) ->
     # before accepting: nothing is visible
     alice.form("/friends/request", {"email": "BOB@example.com "})
     assert alice.get(f"/friends/{bob_id}").status_code == 404
-    assert "Friend requests waiting for you: 1" in bob.get("/").text
+    home = bob.get("/").text
+    assert 'class="icon-btn notification-toggle"' in home and 'class="nav-count"' in home
+    assert "incoming friend requests" in home
+    assert 'class="flash flash-info"' not in home
+    stats_page = bob.get("/stats").text
+    assert 'class="nav-count"' in stats_page and ">1</span>" in stats_page
+    assert "Pending friend requests: 1" in stats_page
 
     incoming = bob.get("/friends").text
+    assert 'class="success small"' in incoming
     friendship_id = int(re.findall(r"/friends/(\d+)/accept", incoming)[0])
     # Alice can't accept her own request on Bob's behalf
     assert alice.form(f"/friends/{friendship_id}/accept").status_code == 404
     bob.form(f"/friends/{friendship_id}/accept")
+    assert 'class="nav-count"' not in bob.get("/stats").text
 
     tracker = alice.get(f"/friends/{bob_id}").text
     assert "Backend" in tracker and "Kiwi.com" in tracker

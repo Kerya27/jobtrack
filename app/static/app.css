@@ -1,6 +1,7 @@
 /* JobTrack UI — custom design system (no Pico). */
 
 :root {
+  color-scheme: light;
   --font: "DM Sans", "Segoe UI", system-ui, sans-serif;
   --font-display: "Sora", "DM Sans", system-ui, sans-serif;
   --radius: 16px;
@@ -81,6 +82,7 @@
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3), 0 10px 28px rgb(0 0 0 / 0.28);
   --shadow-md: 0 16px 48px rgb(0 0 0 / 0.4);
 }
+:root[data-theme="light"] { color-scheme: light; }
 
 *,
 *::before,
@@ -248,7 +250,52 @@ main.container { padding-top: 1.25rem; }
   background: none; border: none; padding: 0; margin: 0; width: auto;
   color: var(--primary); cursor: pointer; font-size: inherit;
 }
-.link-button.nav-item { color: var(--muted); }
+.link-button.nav-item {
+  color: var(--muted);
+  padding: 0.45rem 0.7rem;
+  font-size: 0.92rem;
+}
+.nav-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.3rem;
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  color: var(--primary-ink);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.notification-menu { position: relative; }
+.notification-menu > summary {
+  list-style: none;
+}
+.notification-menu > summary::-webkit-details-marker { display: none; }
+.notification-toggle { position: relative; }
+.notification-toggle .nav-count {
+  position: absolute;
+  top: -0.3rem;
+  right: -0.3rem;
+  border: 2px solid var(--surface);
+}
+.notification-popover {
+  position: absolute;
+  top: calc(100% + 0.65rem);
+  right: 0;
+  z-index: 30;
+  width: min(21rem, calc(100vw - 2rem));
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+.notification-popover p { margin: 0 0 0.6rem; }
+.notification-popover p:last-child { margin-bottom: 0; }
+.notification-popover a { font-size: 0.9rem; font-weight: 650; }
 
 /* ---------- type ---------- */
 h1, h2, h3, h4, .page-title {
@@ -356,6 +403,13 @@ button.small, a[role="button"].small {
   padding: 0.38rem 0.8rem;
   font-size: 0.85rem;
 }
+button.success:not(.nav-item):not(.icon-btn):not(.link-button) {
+  background: var(--ok);
+  color: #fff;
+}
+button.success:not(.nav-item):not(.icon-btn):not(.link-button):hover {
+  background: color-mix(in srgb, var(--ok) 82%, black);
+}
 button.danger, a[role="button"].danger {
   background: transparent;
   border-color: color-mix(in srgb, var(--danger) 45%, var(--line));
@@ -368,11 +422,14 @@ input[role="switch"] {
   appearance: none;
   width: 2.4rem;
   height: 1.3rem;
+  flex: 0 0 2.4rem;
+  display: block;
+  margin: 0;
+  border: 0;
   border-radius: 999px;
   background: var(--line);
   position: relative;
   padding: 0;
-  vertical-align: middle;
   cursor: pointer;
 }
 input[role="switch"]::after {
@@ -616,7 +673,17 @@ small { color: var(--muted); }
   margin: 0.4rem 0 1rem;
 }
 .back-link:hover { color: var(--primary); text-decoration: none; }
-.card-header p { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.card-header p {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.75rem;
+  align-items: center;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.card-header p > * { flex: 0 0 auto; }
+.card-header p > a { display: inline-flex; align-items: center; gap: 0.25rem; }
 .card-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1.5rem; align-items: start; }
 .card-actions { display: flex; gap: var(--jt-gap); flex-wrap: wrap; margin-top: 1rem; }
 .card-actions form { margin: 0; }
@@ -809,6 +876,24 @@ tbody tr:hover { background: var(--surface-2); }
 .friend-list li:last-child { border-bottom: 0; }
 .friend-email { font-weight: 650; overflow-wrap: anywhere; margin-right: 0.5rem; }
 .friend-actions { display: inline-flex; gap: 0.5rem; align-items: center; }
+.friend-actions > a[role="button"].small,
+.friend-actions > form > button.small {
+  width: 9rem;
+  min-width: 9rem;
+  height: 2.4rem;
+  padding: 0.38rem 0.8rem;
+  font-size: 0.85rem;
+}
+.friend-actions > form > button.friend-remove:not(.nav-item):not(.icon-btn):not(.link-button) {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+.friend-actions > form > button.friend-remove:not(.nav-item):not(.icon-btn):not(.link-button):hover {
+  background: color-mix(in srgb, var(--danger) 85%, black);
+  border-color: color-mix(in srgb, var(--danger) 85%, black);
+  color: #fff;
+}
 .friend-add { margin-top: 1rem; }
 .readonly-fields { display: grid; grid-template-columns: max-content 1fr; gap: 0.3rem 1rem; }
 .readonly-fields dt { color: var(--muted); }
@@ -824,6 +909,16 @@ tbody tr:hover { background: var(--surface-2); }
 
 .bookmarklet { cursor: grab; width: auto; margin-right: 0.5rem; font-weight: 700; }
 #bookmarklet textarea { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.75rem; }
+
+input[type="date"]::-webkit-calendar-picker-indicator { filter: brightness(0); }
+:root[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: brightness(0) invert(1);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: brightness(0) invert(1);
+  }
+}
 
 @keyframes rise {
   from { opacity: 0; transform: translateY(8px); }
@@ -848,6 +943,7 @@ tbody tr:hover { background: var(--surface-2); }
   .readonly-fields { grid-template-columns: 1fr; }
   .readonly-fields dd { margin-bottom: 0.4rem; }
   .nav-item span { display: none; }
+  .nav-item .nav-count { display: inline-flex; }
   .nav-item { padding: 0.45rem; }
 }
 
