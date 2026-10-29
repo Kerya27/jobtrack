@@ -24,6 +24,10 @@ pytest · Ruff · Docker · GitHub Actions
 - **Quick add by link.** JSON-LD `JobPosting` → OpenGraph/`<title>` fallback → source detected from
   the domain (Jobs.cz, StartupJobs, LinkedIn, Djinni, Work.ua…). The result is a pre-filled form you
   correct and save (or keep as "saved, not applied yet").
+- **Browser button ("+ JobTrack" bookmarklet).** On a vacancy page, one click sends the page
+  *your browser already has open* to JobTrack, which parses it and shows the pre-filled form.
+  Nothing is downloaded by the server, so it works for sites that block hosting IPs (DOU,
+  LinkedIn, Workday…) and for pages behind your login. Install it from Settings.
 - **Fallback for sites that block bots** (LinkedIn, Indeed): paste the vacancy text; a regex
   heuristic finds the salary (`60 000–80 000 Kč`, `€3000`, `60-80k EUR`, `від 40 000 грн`, `до 3000$`…),
   the rest becomes the description.
@@ -128,8 +132,8 @@ Updates: push to GitHub and Render redeploys; new migrations run on start, exist
 Notes:
 - **Parsing by link can work locally and fail on Render.** Some job boards (and Cloudflare in
   front of them) refuse requests from data-centre IP ranges that free hosts use, while your home
-  IP is fine. The form now shows the reason (e.g. "HTTP 403" vs a timeout); for such sites use
-  "Paste vacancy text", which extracts the same fields.
+  IP is fine. The form shows the reason (e.g. "HTTP 403" vs a timeout); for such sites use the
+  browser button (Settings), or "Paste vacancy text".
 - A free Render service **sleeps after 15 minutes without traffic**; the first request after that
   takes ~30–60 s. Fine for a personal tracker. If it bothers you, point a free uptime monitor at
   `/healthz` (keep within the free instance-hours budget).
@@ -145,6 +149,25 @@ Notes:
 Send them the link — they register with email + password and get their own empty tracker. When
 everyone is in, set `ALLOW_REGISTRATION=false` in the Render dashboard (the service restarts) and the
 sign-up page says registration is closed.
+
+## Working on it together
+
+The repo is set up so a second person (say, someone working on the design) can't easily break
+production:
+
+1. Add them in GitHub → Settings → Collaborators.
+2. Everyone works in a branch and opens a pull request; nobody pushes to `main` directly.
+   Render deploys every commit on `main`, so `main` should only get reviewed, green code.
+3. Turn on branch protection for `main` (Settings → Branches → Add rule): require a pull request
+   and require the CI checks to pass. CI runs Ruff, the tests on SQLite and PostgreSQL, and a
+   Docker build, and the tests render every page, so a broken template fails the PR.
+4. Before pushing Python changes run `ruff format . && ruff check . && pytest`.
+   Templates, CSS and JS aren't formatted by CI.
+5. Design work is mostly `app/templates/`, `app/static/app.css` and `app/static/app.js`. Keep the
+   ids, `name`s and `data-*` attributes that HTMX, app.js and the tests rely on (`#results`,
+   `#filters`, `#new-form`, `#status-chips`, `#bulk`, `data-board`, `data-sent-toggle`…), and add
+   new UI text to `app/i18n.py` in both languages (a test checks they match).
+6. `git pull` before starting work, to avoid conflicts.
 
 ## Project structure
 
@@ -162,8 +185,9 @@ app/
   routers/         auth, applications (list/board, HTMX fragments, bulk), friends, stats,
                    settings (+language, CSV), api (/api/v1)
   services/        applications, friends, job_parser, text_heuristics, salary, ssrf,
-                   rate_limit, stats, csv_io
-  static/          app.css, app.js (bulk selection, Today chip, board drag & drop; optional)
+                   rate_limit, stats, csv_io, bookmarklet
+  static/          app.css, app.js (bulk selection, Today chip, board drag & drop, capture
+                   window), bookmarklet.js (source of the browser button)
   templates/       Jinja2 pages and partials/ for HTMX
 alembic/           migrations
 tests/             pytest + fixtures/*.html
@@ -240,6 +264,16 @@ Things the spec left open, and why they were decided this way:
   form doesn't reveal who is registered; asking someone who already asked you accepts it.
 - **"Sent today"** = `applied_at` is today (in `DISPLAY_TIMEZONE`) and status isn't `saved`. The chip
   count uses the same query as the filter, so the number always matches what a click shows.
+- **Browser button instead of a browser extension.** The bookmarklet opens `/capture` (a normal
+  top-level page, so the `SameSite=Lax` session cookie is sent) and hands it the page with
+  `postMessage`, aimed at JobTrack's origin only. The capture page accepts a message only from
+  `window.opener`, posts it with the CSRF token to `/applications/capture`, which **parses but
+  never fetches** (no SSRF surface; the HTML is capped at ~2 MB after the bookmarklet strips
+  scripts, styles and images, keeping JSON-LD). Sites with `Cross-Origin-Opener-Policy:
+  same-origin` cut the link between the windows; for them the bookmarklet has already copied
+  the page text to the clipboard, and the capture page opens "paste the text" after 4 s.
+  If the session expired, login redirects back to the capture window (`?next=`, same-site
+  paths only), and the waiting bookmarklet still delivers the page.
 - **Duplicates**: same URL (ignoring a trailing slash), or same company (normalized: case,
   punctuation, legal suffixes like s.r.o./UAB/Inc) + position + location; an empty location
   matches any city. It is a warning, not a constraint: applying twice can be intentional.

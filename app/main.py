@@ -3,6 +3,7 @@
 import logging
 from collections.abc import Awaitable, Callable
 from pathlib import Path
+from urllib.parse import urlencode
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response
@@ -95,7 +96,11 @@ def _register_error_handlers(app: FastAPI) -> None:
             return JSONResponse({"detail": "Not authenticated"}, status_code=401)
         if is_htmx(request):
             return Response(status_code=200, headers={"HX-Redirect": "/login"})
-        return RedirectResponse("/login", status_code=303)
+        target = "/login"
+        if request.method == "GET" and request.url.path != "/":
+            path = request.url.path + (f"?{request.url.query}" if request.url.query else "")
+            target += "?" + urlencode({"next": path})
+        return RedirectResponse(target, status_code=303)
 
     @app.exception_handler(CSRFError)
     async def csrf_failed(request: Request, _exc: CSRFError) -> Response:

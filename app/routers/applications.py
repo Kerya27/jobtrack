@@ -14,7 +14,7 @@ from app.config import get_settings
 from app.deps import CSRFProtected, CurrentUser, DbSession
 from app.i18n import t
 from app.models import Application, ApplicationStatus, EventType, User, WorkMode
-from app.schemas import ApplicationIn, EventIn, form_errors
+from app.schemas import ApplicationIn, CaptureIn, EventIn, form_errors
 from app.services import applications as svc
 from app.services import friends as friends_svc
 from app.services import job_parser, rate_limit
@@ -308,6 +308,39 @@ def parse_url(
         message=message,
         message_kind=kind,
         offer_text_fallback=kind == "warning",
+        check_duplicates=True,
+    )
+
+
+@router.get("/capture")
+def capture_page(
+    request: Request, user: CurrentUser, url: Annotated[str, Query(max_length=2000)] = ""
+) -> Response:
+    """The window the bookmarklet opens; app.js receives the page and posts it below."""
+    return render(request, "capture.html", {"user": user, "url": url})
+
+
+@router.post("/applications/capture", dependencies=[CSRFProtected])
+def capture(request: Request, data: CaptureIn, user: CurrentUser, db: DbSession) -> Response:
+    """Parse a page the user's browser already has open. Nothing is fetched by the server,
+    so sites that block hosting IPs (and pages behind the user's login) work too."""
+    url = data.url.strip()
+    if not re.match(r"^https?://[^\s/]+\S*$", url, re.IGNORECASE):
+        url = ""
+    parsed = job_parser.parse_captured(data.html, url, data.text)
+    if parsed.needs_manual:
+        message, kind = t("parse_failed"), "warning"
+    elif parsed.is_complete:
+        message, kind = t("parse_ok"), "success"
+    else:
+        message, kind = t("parse_partial"), "info"
+    return render_new_form(
+        request,
+        db,
+        user,
+        form_values(parsed.form_values()),
+        message=message,
+        message_kind=kind,
         check_duplicates=True,
     )
 

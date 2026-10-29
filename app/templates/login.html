@@ -6,6 +6,7 @@
   <h2>{{ t("login_title") }}</h2>
   <form method="post" action="/login">
     {{ csrf() }}
+    {% if next and next != "/" %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
     {% if error %}<p class="flash flash-error" role="alert">{{ error }}</p>{% endif %}
     <label>
       {{ t("email") }}

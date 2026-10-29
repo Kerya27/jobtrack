@@ -209,3 +209,11 @@ def form_errors(exc: ValidationError) -> dict[str, str]:
             message = t(_ERROR_KEYS.get(kind, "err_invalid"))
         errors.setdefault(field, message)
     return errors
+
+
+class CaptureIn(BaseModel):
+    """A vacancy page sent by the user's browser (the "Save to JobTrack" bookmarklet)."""
+
+    url: str = Field(default="", max_length=2000)
+    html: str = Field(default="", max_length=2_100_000)
+    text: str = Field(default="", max_length=200_000)

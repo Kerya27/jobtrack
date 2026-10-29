@@ -18,7 +18,7 @@ from app.security import (
     rotate_session,
     verify_password,
 )
-from app.web import flash, redirect, render
+from app.web import flash, redirect, render, safe_next
 
 router = APIRouter(tags=["auth"])
 
@@ -89,10 +89,10 @@ def register(
 
 
 @router.get("/login")
-def login_page(request: Request, user: OptionalUser) -> Response:
+def login_page(request: Request, user: OptionalUser, next: str = "/") -> Response:
     if user:
-        return redirect(request, "/")
-    return render(request, "login.html", {"form": {}})
+        return redirect(request, safe_next(next))
+    return render(request, "login.html", {"form": {}, "next": safe_next(next)})
 
 
 @router.post("/login", dependencies=[CSRFProtected])
@@ -101,6 +101,7 @@ def login(
     db: DbSession,
     email: Annotated[str, Form()] = "",
     password: Annotated[str, Form()] = "",
+    next: Annotated[str, Form(max_length=2000)] = "/",
 ) -> Response:
     email = normalize_email(email)
     user = db.scalar(select(User).where(User.email == email))
@@ -109,13 +110,13 @@ def login(
         return render(
             request,
             "login.html",
-            {"form": {"email": email}, "error": t("err_bad_credentials")},
+            {"form": {"email": email}, "error": t("err_bad_credentials"), "next": safe_next(next)},
             status_code=401,
         )
     rotate_session(request)
     request.session[USER_SESSION_KEY] = user.id
     request.session[LANG_SESSION_KEY] = user.language
-    return redirect(request, "/")
+    return redirect(request, safe_next(next))
 
 
 @router.post("/logout", dependencies=[CSRFProtected])

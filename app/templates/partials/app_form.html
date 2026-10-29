@@ -8,6 +8,7 @@
       {{ message }}
       {% if offer_text_fallback %}
         <br><a href="#" hx-get="/applications/new?mode=text&amp;url={{ values.get('url', '')|urlencode }}" hx-target="#new-form">{{ t("paste_text_button") }}</a>
+        · <a href="/settings#bookmarklet">{{ t("bookmarklet_try") }}</a>
       {% endif %}
     </p>
   {% endif %}

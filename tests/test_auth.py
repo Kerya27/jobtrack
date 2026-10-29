@@ -12,7 +12,9 @@ def test_pages_require_login(anon: Client) -> None:
     for url in ("/", "/applications/1", "/stats", "/settings", "/export.csv"):
         response = anon.get(url, follow_redirects=False)
         assert response.status_code == 303, url
-        assert response.headers["location"] == "/login"
+        # after logging in you come back where you were (only same-site paths, see safe_next)
+        expected = "/login" if url == "/" else "/login?next=" + url.replace("/", "%2F")
+        assert response.headers["location"] == expected
 
 
 def test_htmx_request_without_login_gets_hx_redirect(anon: Client) -> None:

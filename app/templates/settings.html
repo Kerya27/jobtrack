@@ -30,6 +30,21 @@
   </form>
 </article>
 
+<article id="bookmarklet">
+  <h3>{{ t("bookmarklet_title") }}</h3>
+  <p>{{ t("bookmarklet_hint") }}</p>
+  <p>
+    <a href="{{ bookmarklet }}" class="bookmarklet" role="button" draggable="true"
+       title="{{ t('bookmarklet_drag') }}" onclick='event.preventDefault(); alert({{ t("bookmarklet_drag")|tojson }})'>{{ t("bookmarklet_button") }}</a>
+    <small class="muted">← {{ t("bookmarklet_drag") }}</small>
+  </p>
+  <details>
+    <summary>{{ t("bookmarklet_manual") }}</summary>
+    <p><small>{{ t("bookmarklet_manual_hint") }}</small></p>
+    <textarea readonly rows="3" onclick="this.select()" aria-label="{{ t('bookmarklet_title') }}">{{ bookmarklet }}</textarea>
+  </details>
+</article>
+
 <article id="data">
   <h3>{{ t("data_title") }}</h3>
   <p><a href="/export.csv" role="button" class="outline" download>{{ t("export_csv") }}</a></p>

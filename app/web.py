@@ -98,6 +98,13 @@ def render(
     return templates.TemplateResponse(request, name, ctx, status_code=status_code)
 
 
+def safe_next(value: str | None) -> str:
+    """Only same-site paths: never redirect to another host ("//evil.com", "https://…")."""
+    if value and value.startswith("/") and not value.startswith("//") and "\\" not in value:
+        return value
+    return "/"
+
+
 def redirect(request: Request, url: str) -> Response:
     """POST/redirect/GET that also works for HTMX requests (full-page navigation)."""
     if is_htmx(request):

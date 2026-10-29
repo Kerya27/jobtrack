@@ -12,8 +12,9 @@ from app.models import User
 from app.routers.auth import validate_new_password
 from app.security import LANG_SESSION_KEY, hash_password, rotate_session, verify_password
 from app.services import csv_io
+from app.services.bookmarklet import bookmarklet_href
 from app.timeutil import today_local
-from app.web import flash, redirect, render
+from app.web import flash, redirect, render, safe_next
 
 router = APIRouter(tags=["pages"])
 
@@ -21,19 +22,14 @@ router = APIRouter(tags=["pages"])
 def _settings_page(
     request: Request, user: User, status_code: int = 200, **context: Any
 ) -> Response:
-    return render(request, "settings.html", {"user": user, **context}, status_code=status_code)
+    origin = str(request.base_url).rstrip("/")
+    context = {"user": user, "bookmarklet": bookmarklet_href(origin), **context}
+    return render(request, "settings.html", context, status_code=status_code)
 
 
 @router.get("/settings")
 def settings_page(request: Request, user: CurrentUser) -> Response:
     return _settings_page(request, user)
-
-
-def _safe_next(value: str) -> str:
-    """Only same-site paths: never redirect to another host ("//evil.com", "https://…")."""
-    if value.startswith("/") and not value.startswith(("//", "/\\")) and "\\" not in value:
-        return value
-    return "/"
 
 
 @router.post("/language", dependencies=[CSRFProtected])
@@ -50,7 +46,7 @@ def switch_language(
     if user is not None:
         user.language = lang
         db.commit()
-    return redirect(request, _safe_next(next))
+    return redirect(request, safe_next(next))
 
 
 @router.post("/settings/preferences", dependencies=[CSRFProtected])

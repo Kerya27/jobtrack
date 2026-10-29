@@ -441,3 +441,29 @@ def parse_pasted_text(text: str, url: str | None = None) -> ParsedJob:
             salary.currency,
         )
     return job
+
+
+def parse_captured(html: str, url: str, text: str = "") -> ParsedJob:
+    """A page the user's own browser sent us (bookmarklet): nothing is downloaded.
+
+    The HTML (with JSON-LD) is parsed as usual. The page's visible text only fills gaps: the
+    salary and the description, and position/company when the HTML gave nothing at all
+    (the first lines of a whole page are usually navigation, so they are a last resort).
+    """
+    job = parse_html(html, url) if html.strip() else ParsedJob(url=url)
+    job.url = url
+    job.source = job.source or (source_from_url(url) if url else None)
+    if not text.strip():
+        return job
+    from_text = parse_pasted_text(text, url or None)
+    if job.salary_min is None and job.salary_max is None:
+        job.salary_min, job.salary_max = from_text.salary_min, from_text.salary_max
+        job.salary_currency = from_text.salary_currency
+    if not job.description:
+        job.description = from_text.description
+    if job.needs_manual:
+        job.position, job.company = from_text.position, from_text.company
+        job.location = job.location or from_text.location
+        if job.work_mode == WorkMode.UNKNOWN:
+            job.work_mode = from_text.work_mode
+    return job

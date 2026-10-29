@@ -134,6 +134,63 @@
     });
   });
 
+  // ---------- "Save from page": the window opened by the browser button ----------
+  function startCapture() {
+    var box = document.getElementById("capture");
+    if (!box) return;
+    var status = document.getElementById("capture-status");
+    var target = document.getElementById("new-form");
+    var token = document.querySelector('meta[name="csrf-token"]').content;
+    var done = false;
+
+    function show(html) {
+      target.innerHTML = html;
+      if (window.htmx) window.htmx.process(target);
+      status.hidden = true;
+    }
+
+    function fallback() {
+      if (done) return;
+      done = true;
+      status.textContent = box.dataset.fallback;
+      status.className = "flash flash-warning";
+      status.removeAttribute("aria-busy");
+      fetch("/applications/new?mode=text&url=" + encodeURIComponent(box.dataset.url || ""), {
+        headers: { "HX-Request": "true" }
+      }).then(function (r) { return r.text(); }).then(function (html) {
+        target.innerHTML = html;
+        if (window.htmx) window.htmx.process(target);
+        var area = target.querySelector("textarea");
+        if (area) area.focus();
+      });
+    }
+
+    window.addEventListener("message", function (e) {
+      // Only the window that opened us (the vacancy page) may send the page, once.
+      if (done || e.source !== window.opener || !e.data || e.data.type !== "jobtrack-page") return;
+      done = true;
+      status.textContent = box.dataset.reading;
+      fetch("/applications/capture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": token, "HX-Request": "true" },
+        body: JSON.stringify({
+          url: String(e.data.url || ""), html: String(e.data.html || ""), text: String(e.data.text || "")
+        })
+      }).then(function (r) {
+        if (!r.ok && r.status !== 422) throw new Error("HTTP " + r.status);
+        return r.text();
+      }).then(show).catch(function () { done = false; fallback(); });
+    });
+
+    if (window.opener) {
+      window.opener.postMessage({ type: "jobtrack-ready" }, "*"); // just a ping, carries no data
+      setTimeout(fallback, 4000);
+    } else {
+      fallback(); // opened directly, or the site cut the link to its pop-ups (COOP)
+    }
+  }
+  document.addEventListener("DOMContentLoaded", startCapture);
+
   // If a status change fails, reload so the board never shows a state that wasn't saved.
   document.addEventListener("htmx:responseError", function (e) {
     var target = e.detail && e.detail.target;

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ t("capture_title") }} — {{ t("app_name") }}{% endblock %}
+
+{% block content %}
+{# app.js: tells the opener (the bookmarklet) we're ready, receives the page, posts it to
+   /applications/capture and shows the pre-filled form; falls back to "paste the text". #}
+<article id="capture" data-url="{{ url }}"
+         data-reading="{{ t('capture_reading') }}" data-fallback="{{ t('capture_fallback') }}">
+  <h2>{{ t("capture_title") }}</h2>
+  <p id="capture-status" class="flash flash-info" role="status" aria-busy="true">{{ t("capture_waiting") }}</p>
+  <div id="new-form"></div>
+</article>
+{% endblock %}

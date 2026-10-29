@@ -20,6 +20,8 @@
     <a href="#" hx-get="/applications/new?mode=text" hx-target="#new-form">{{ t("paste_text_button") }}</a>
     <span aria-hidden="true">·</span>
     <a href="#" hx-get="/applications/new" hx-target="#new-form">{{ t("manual_button") }}</a>
+    <span aria-hidden="true">·</span>
+    <a href="/settings#bookmarklet">{{ t("bookmarklet_title") }}</a>
   </p>
   <p id="parse-indicator" class="htmx-indicator" aria-busy="true">{{ t("parsing") }}</p>
   <div id="new-form">
