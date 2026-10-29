@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% from "macros.html" import csrf with context %}
+{% from "macros.html" import csrf, icon with context %}
 {% block title %}{{ t("settings_title") }} — {{ t("app_name") }}{% endblock %}
 
 {% block content %}
-<h2>{{ t("settings_title") }}</h2>
+<h2 class="page-title">{{ t("settings_title") }}</h2>
 <p class="muted">{{ user.email }}</p>
 
 <article id="preferences">
-  <h3>{{ t("preferences") }}</h3>
+  <h3 class="section-head"><span class="icon-bubble">{{ icon("settings") }}</span>{{ t("preferences") }}</h3>
   <form method="post" action="/settings/preferences">
     {{ csrf() }}
     <div class="grid">
@@ -31,7 +31,7 @@
 </article>
 
 <article id="bookmarklet">
-  <h3>{{ t("bookmarklet_title") }}</h3>
+  <h3 class="section-head"><span class="icon-bubble">{{ icon("bookmark") }}</span>{{ t("bookmarklet_title") }}</h3>
   <p>{{ t("bookmarklet_hint") }}</p>
   <p>
     <a href="{{ bookmarklet }}" class="bookmarklet" role="button" draggable="true"
@@ -46,8 +46,8 @@
 </article>
 
 <article id="data">
-  <h3>{{ t("data_title") }}</h3>
-  <p><a href="/export.csv" role="button" class="outline" download>{{ t("export_csv") }}</a></p>
+  <h3 class="section-head"><span class="icon-bubble">{{ icon("download") }}</span>{{ t("data_title") }}</h3>
+  <p><a href="/export.csv" role="button" class="outline" download>{{ icon("download") }}{{ t("export_csv") }}</a></p>
   <p><small>{{ t("export_hint") }}</small></p>
 
   <form method="post" action="/import" enctype="multipart/form-data">
@@ -58,7 +58,7 @@
              {% if import_error %}aria-invalid="true"{% endif %}>
       <small {% if import_error %}class="field-error"{% endif %}>{{ import_error or t("import_hint") }}</small>
     </label>
-    <button type="submit" class="secondary">{{ t("import_button") }}</button>
+    <button type="submit" class="secondary">{{ icon("upload") }}{{ t("import_button") }}</button>
   </form>
 
   {% if import_report %}
@@ -74,7 +74,7 @@
 </article>
 
 <article>
-  <h3>{{ t("change_password") }}</h3>
+  <h3 class="section-head"><span class="icon-bubble">{{ icon("lock") }}</span>{{ t("change_password") }}</h3>
   {% set pe = password_errors or {} %}
   <form method="post" action="/settings/password">
     {{ csrf() }}
@@ -101,7 +101,7 @@
 </article>
 
 <article class="danger-zone">
-  <h3>{{ t("danger_zone") }}</h3>
+  <h3 class="section-head"><span class="icon-bubble">{{ icon("trash") }}</span>{{ t("danger_zone") }}</h3>
   <p>{{ t("delete_account_hint") }}</p>
   <form method="post" action="/settings/delete" onsubmit='return confirm({{ t("delete_account_confirm")|tojson }})'>
     {{ csrf() }}

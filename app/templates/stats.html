@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros.html" import badge %}
+{% from "macros.html" import badge, icon %}
 {% block title %}{{ t("stats_title") }} — {{ t("app_name") }}{% endblock %}
 
 {% macro pct(value) -%}
@@ -8,7 +8,7 @@
 
 {% macro group_table(title, rows) %}
 <article>
-  <h3>{{ title }}</h3>
+  <h3 class="section-head">{{ icon("file") }}{{ title }}</h3>
   <div class="table-wrap">
     <table class="striped">
       <thead>
@@ -39,7 +39,7 @@
 {% endmacro %}
 
 {% block content %}
-<h2>{{ t("stats_title") }}</h2>
+<h2 class="page-title">{{ t("stats_title") }}</h2>
 
 {% if stats.total == 0 %}
   <p class="empty">{{ t("stats_empty") }}</p>
@@ -55,7 +55,7 @@
   </div>
 
   <article>
-    <h3>{{ t("stats_funnel") }}</h3>
+    <h3 class="section-head">{{ icon("chart") }}{{ t("stats_funnel") }}</h3>
     <div class="funnel">
       {% for step in stats.funnel %}
         <div class="funnel-row">
@@ -71,7 +71,7 @@
   </article>
 
   <article>
-    <h3>{{ t("stats_weekly") }}</h3>
+    <h3 class="section-head">{{ icon("calendar") }}{{ t("stats_weekly") }}</h3>
     {% set top = stats.weekly_max or 1 %}
     <div class="hist" role="img" aria-label="{{ t('stats_weekly') }}">
       {% for week in stats.weekly %}
@@ -88,7 +88,7 @@
   {{ group_table(t("stats_by_source"), stats.by_source) }}
 
   <article>
-    <h3>{{ t("stats_by_status") }}</h3>
+    <h3 class="section-head">{{ icon("target") }}{{ t("stats_by_status") }}</h3>
     <div class="chips">
       {% for status, count in stats.by_status %}
         <a href="/?status={{ status.value }}" class="status-count">{{ badge(status) }} <strong>{{ count }}</strong></a>

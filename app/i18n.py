@@ -26,6 +26,11 @@ STRINGS: Final[dict[str, dict[str, str]]] = {
         "nav_register": "Sign up",
         "nav_friends": "Friends",
         "switch_language": "Language",
+        "theme_toggle": "Color theme",
+        "tagline": "Track applications. See what works.",
+        "skip_to_content": "Skip to content",
+        "quick_add_hint": "Paste a link, drop in the vacancy text, or fill the form yourself.",
+        "add_event_button": "Add",
         # auth
         "login_title": "Log in",
         "register_title": "Sign up",
@@ -454,6 +459,11 @@ STRINGS: Final[dict[str, dict[str, str]]] = {
         # added with friends / bulk actions / board / language switch
         "nav_friends": "Друзья",
         "switch_language": "Язык",
+        "theme_toggle": "Цветовая тема",
+        "tagline": "Веди отклики. Смотри, что срабатывает.",
+        "skip_to_content": "К содержимому",
+        "quick_add_hint": "Вставь ссылку, текст вакансии или заполни форму вручную.",
+        "add_event_button": "Добавить",
         "parse_reason": "Причина: {detail}.",
         "duplicate_title": "Похоже на дубль",
         "duplicate_hint": "У тебя уже есть отклик с той же ссылкой или с той же компанией, позицией и локацией:",

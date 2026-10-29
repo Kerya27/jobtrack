@@ -1,9 +1,12 @@
 {% extends "base.html" %}
-{% from "macros.html" import csrf with context %}
+{% from "macros.html" import csrf, icon with context %}
 {% block title %}{{ t("login_title") }} — {{ t("app_name") }}{% endblock %}
+{% block body_class %}page-auth{% endblock %}
 {% block content %}
 <article class="auth-card">
+  <div class="auth-kicker">{{ icon("logo") }}{{ t("app_name") }}</div>
   <h2>{{ t("login_title") }}</h2>
+  <p class="auth-lead">{{ t("tagline") }}</p>
   <form method="post" action="/login">
     {{ csrf() }}
     {% if next and next != "/" %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
@@ -16,7 +19,7 @@
       {{ t("password") }}
       <input type="password" name="password" required autocomplete="current-password">
     </label>
-    <button type="submit">{{ t("login_button") }}</button>
+    <button type="submit">{{ icon("lock") }}{{ t("login_button") }}</button>
   </form>
   <p>{{ t("no_account") }} <a href="/register">{{ t("nav_register") }}</a></p>
 </article>

@@ -1,9 +1,12 @@
 {% extends "base.html" %}
-{% from "macros.html" import csrf, input with context %}
+{% from "macros.html" import csrf, input, icon with context %}
 {% block title %}{{ t("register_title") }} — {{ t("app_name") }}{% endblock %}
+{% block body_class %}page-auth{% endblock %}
 {% block content %}
 <article class="auth-card">
+  <div class="auth-kicker">{{ icon("logo") }}{{ t("app_name") }}</div>
   <h2>{{ t("register_title") }}</h2>
+  <p class="auth-lead">{{ t("tagline") }}</p>
   {% if not allowed %}
     <p class="flash flash-warning">{{ t("registration_closed") }}</p>
   {% else %}
@@ -21,7 +24,7 @@
         {{ t("password_repeat") }}
         <input type="password" name="password_repeat" required minlength="8" autocomplete="new-password">
       </label>
-      <button type="submit">{{ t("register_button") }}</button>
+      <button type="submit">{{ icon("user-plus") }}{{ t("register_button") }}</button>
     </form>
   {% endif %}
   <p>{{ t("have_account") }} <a href="/login">{{ t("nav_login") }}</a></p>

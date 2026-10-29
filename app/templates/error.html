@@ -1,9 +1,11 @@
 {% extends "base.html" %}
+{% from "macros.html" import icon with context %}
 {% block title %}{{ title }} — {{ t("app_name") }}{% endblock %}
 {% block content %}
 <article class="auth-card">
+  <div class="auth-kicker">{{ icon("alert") }}{{ t("app_name") }}</div>
   <h2>{{ title }}</h2>
   <p>{{ text }}</p>
-  <p><a href="/">{{ t("back_to_list") }}</a></p>
+  <p><a class="back-link" href="/">{{ icon("arrow-left") }}{{ t("back_to_list") }}</a></p>
 </article>
 {% endblock %}

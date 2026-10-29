@@ -1,6 +1,6 @@
-{% from "macros.html" import badge, app_meta with context %}
+{% from "macros.html" import badge, app_meta, company_mark with context %}
 {% set prefix = app_url_prefix or "/applications/" %}
-<article class="app-row" id="app-{{ app.id }}">
+<article class="app-row" id="app-{{ app.id }}" style="--i: {{ loop.index0 if loop else 0 }}">
   {% if not readonly %}
     <label class="row-select">
       <input type="checkbox" name="ids" value="{{ app.id }}" form="bulk"
@@ -8,10 +8,15 @@
     </label>
   {% endif %}
   <div class="app-main">
-    <a href="{{ prefix }}{{ app.id }}" class="app-title">{{ app.position }}</a>
-    <div class="app-company">
-      {{ app.company }}{% if app.location %} · {{ app.location }}{% endif %}
-      {% if app.work_mode.value != "unknown" %} · {{ work_mode_label(app.work_mode) }}{% endif %}
+    <div class="app-head">
+      {{ company_mark(app.company) }}
+      <div>
+        <a href="{{ prefix }}{{ app.id }}" class="app-title">{{ app.position }}</a>
+        <div class="app-company">
+          {{ app.company }}{% if app.location %} · {{ app.location }}{% endif %}
+          {% if app.work_mode.value != "unknown" %} · {{ work_mode_label(app.work_mode) }}{% endif %}
+        </div>
+      </div>
     </div>
     <div class="app-meta">
       {{ badge(app.status) }}

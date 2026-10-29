@@ -191,6 +191,21 @@
   }
   document.addEventListener("DOMContentLoaded", startCapture);
 
+  // Color theme: stored locally, does not go to the server.
+  function currentTheme() {
+    var stored = null;
+    try { stored = localStorage.getItem("jt-theme"); } catch (e) {}
+    if (stored === "light" || stored === "dark") return stored;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  document.addEventListener("click", function (e) {
+    var btn = e.target instanceof Element ? e.target.closest("[data-theme-toggle]") : null;
+    if (!btn) return;
+    var next = currentTheme() === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem("jt-theme", next); } catch (err) {}
+  });
+
   // If a status change fails, reload so the board never shows a state that wasn't saved.
   document.addEventListener("htmx:responseError", function (e) {
     var target = e.detail && e.detail.target;
