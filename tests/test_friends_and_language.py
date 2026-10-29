@@ -36,7 +36,9 @@ def test_friend_request_flow_and_read_only_access(alice: Client, bob: Client) ->
     bob_app = bob.create_app(company="Kiwi.com", position="Backend", notes="HR: Jana")
     bob.create_app(company="Saved", position="Saved role", status="saved")
     bob.create_app(
-        company="Old", position="Old role", applied_at=(today_local() - timedelta(days=1)).isoformat()
+        company="Old",
+        position="Old role",
+        applied_at=(today_local() - timedelta(days=1)).isoformat(),
     )
     bob_id = user_id(bob)
 
