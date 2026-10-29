@@ -194,3 +194,16 @@ def test_timeout_is_reported_as_network_error() -> None:
     with pytest.raises(FetchError) as exc:
         fetch_html("https://jobs.example/slow", transport=mock(handler))
     assert exc.value.reason == FetchFailure.NETWORK
+
+
+def test_ipv4_addresses_are_tried_first(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Free hosts often have no IPv6 route; trying an AAAA address first wastes the timeout."""
+
+    def both(host: str, port: int, **_kwargs: object) -> list[tuple[object, ...]]:
+        return [
+            (socket.AF_INET6, socket.SOCK_STREAM, 6, "", ("2a00:1450:4001::64", port, 0, 0)),
+            (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.215.14", port)),
+        ]
+
+    monkeypatch.setattr(socket, "getaddrinfo", both)
+    assert _real_resolve("example.com", 443) == ["93.184.215.14", "2a00:1450:4001::64"]

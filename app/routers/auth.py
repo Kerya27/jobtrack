@@ -8,10 +8,16 @@ from sqlalchemy import select
 
 from app.config import get_settings
 from app.deps import USER_SESSION_KEY, CSRFProtected, DbSession, OptionalUser
-from app.i18n import t
+from app.i18n import current_language, t
 from app.models import User
 from app.schemas import EMAIL_RE
-from app.security import BCRYPT_MAX_BYTES, hash_password, rotate_session, verify_password
+from app.security import (
+    BCRYPT_MAX_BYTES,
+    LANG_SESSION_KEY,
+    hash_password,
+    rotate_session,
+    verify_password,
+)
 from app.web import flash, redirect, render
 
 router = APIRouter(tags=["auth"])
@@ -73,7 +79,7 @@ def register(
             status_code=422,
         )
 
-    user = User(email=email, password_hash=hash_password(password))
+    user = User(email=email, password_hash=hash_password(password), language=current_language())
     db.add(user)
     db.commit()
     rotate_session(request)
@@ -108,6 +114,7 @@ def login(
         )
     rotate_session(request)
     request.session[USER_SESSION_KEY] = user.id
+    request.session[LANG_SESSION_KEY] = user.language
     return redirect(request, "/")
 
 

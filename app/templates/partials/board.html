@@ -1,0 +1,32 @@
+{% from "macros.html" import app_meta with context %}
+{# Kanban: a column per status. Drag & drop (app.js) or the small select changes the status. #}
+{% set prefix = app_url_prefix or "/applications/" %}
+{% if not readonly %}<p class="muted board-hint">{{ t("board_hint") }}</p>{% endif %}
+<div class="board" {% if not readonly %}data-board{% endif %}>
+  {% for status, cards in board_columns.items() %}
+    <section class="board-col" data-status="{{ status.value }}" aria-label="{{ status_label(status) }}">
+      <header class="board-col-head">
+        <span class="badge badge-{{ status.value }}">{{ status_label(status) }}</span>
+        <span class="count">{{ cards|length }}</span>
+      </header>
+      <div class="board-cards">
+        {% for app in cards %}
+          <article class="board-card" data-id="{{ app.id }}" {% if not readonly %}draggable="true"{% endif %}>
+            <a href="{{ prefix }}{{ app.id }}" class="app-title">{{ app.position }}</a>
+            <div class="app-company">{{ app.company }}{% if app.location %} · {{ app.location }}{% endif %}</div>
+            <div class="app-meta">{{ app_meta(app) }}</div>
+            {% if not readonly %}
+              <select name="new_status" class="board-select" aria-label="{{ t('change_status') }}"
+                      hx-post="/applications/{{ app.id }}/status" hx-trigger="change"
+                      hx-target="#results" hx-include="#filters">
+                {% for s in STATUSES %}
+                  <option value="{{ s.value }}" {% if app.status == s %}selected{% endif %}>{{ status_label(s) }}</option>
+                {% endfor %}
+              </select>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% endfor %}
+</div>

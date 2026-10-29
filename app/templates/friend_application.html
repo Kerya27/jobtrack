@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% from "macros.html" import badge %}
+{% block title %}{{ app.position }} — {{ app.company }}{% endblock %}
+
+{% block content %}
+<p><a href="/friends/{{ friend.id }}">← {{ t("friend_view_title", name=friend_name) }}</a></p>
+
+<hgroup class="card-header">
+  <h2>{{ app.position }}</h2>
+  <p>
+    {{ app.company }} {{ badge(app.status) }}
+    {% if app.archived %}<span class="badge badge-archived">{{ t("archived_badge") }}</span>{% endif %}
+    {% if app.url %}· <a href="{{ app.url }}" target="_blank" rel="noopener noreferrer nofollow">{{ app.source or t("f_url") }} ↗</a>{% endif %}
+  </p>
+</hgroup>
+<p class="muted">{{ t("friend_readonly") }}</p>
+
+<div class="card-layout">
+  <article>
+    <dl class="readonly-fields">
+      {% set salary = format_salary(app.salary_min, app.salary_max, app.salary_currency) %}
+      {% for label, value in [
+          (t("f_location"), app.location),
+          (t("f_work_mode"), work_mode_label(app.work_mode) if app.work_mode.value != "unknown" else none),
+          (t("section_salary"), salary),
+          (t("f_source"), app.source),
+          (t("f_resume_version"), app.resume_version),
+          (t("f_applied_at"), app.applied_at|d if app.applied_at else none),
+          (t("f_contact_name"), app.contact_name),
+          (t("f_contact_email"), app.contact_email),
+        ] if value %}
+        <dt>{{ label }}</dt><dd>{{ value }}</dd>
+      {% endfor %}
+      {% if app.portal_url %}<dt>{{ t("f_portal_url") }}</dt><dd><a href="{{ app.portal_url }}" target="_blank" rel="noopener noreferrer nofollow">{{ app.portal_url }}</a></dd>{% endif %}
+    </dl>
+    {% if app.notes %}<h4>{{ t("f_notes") }}</h4><p class="event-text">{{ app.notes }}</p>{% endif %}
+    {% if app.description %}
+      <details>
+        <summary>{{ t("f_description") }}</summary>
+        <p class="event-text">{{ app.description }}</p>
+      </details>
+    {% endif %}
+  </article>
+
+  <aside>
+    <h3>{{ t("timeline") }}</h3>
+    {% if events %}
+      <ol class="events">
+        {% for e in events %}
+          <li class="event event-{{ e.type.value }}">
+            <div class="event-head">
+              <span class="event-type">{{ event_type_label(e.type) }}</span>
+              <time>{{ e.created_at|dt }}</time>
+            </div>
+            <div class="event-text">{{ event_text(e) }}</div>
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p class="empty">{{ t("timeline_empty") }}</p>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

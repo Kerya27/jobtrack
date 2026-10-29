@@ -1,4 +1,4 @@
-"""Account settings: password change, CSV export/import, account deletion."""
+"""Account settings: preferences, language, password, CSV export/import, account deletion."""
 
 from typing import Annotated, Any
 
@@ -6,11 +6,11 @@ from fastapi import APIRouter, Form, Request, UploadFile
 from fastapi.responses import Response
 from sqlalchemy import delete
 
-from app.deps import CSRFProtected, CurrentUser, DbSession
-from app.i18n import t
+from app.deps import CSRFProtected, CurrentUser, DbSession, OptionalUser
+from app.i18n import LANGUAGES, normalize_language, set_language, t
 from app.models import User
 from app.routers.auth import validate_new_password
-from app.security import hash_password, rotate_session, verify_password
+from app.security import LANG_SESSION_KEY, hash_password, rotate_session, verify_password
 from app.services import csv_io
 from app.timeutil import today_local
 from app.web import flash, redirect, render
@@ -27,6 +27,54 @@ def _settings_page(
 @router.get("/settings")
 def settings_page(request: Request, user: CurrentUser) -> Response:
     return _settings_page(request, user)
+
+
+def _safe_next(value: str) -> str:
+    """Only same-site paths: never redirect to another host ("//evil.com", "https://…")."""
+    if value.startswith("/") and not value.startswith(("//", "/\\")) and "\\" not in value:
+        return value
+    return "/"
+
+
+@router.post("/language", dependencies=[CSRFProtected])
+def switch_language(
+    request: Request,
+    user: OptionalUser,
+    db: DbSession,
+    lang: Annotated[str, Form()] = "",
+    next: Annotated[str, Form(max_length=2000)] = "/",
+) -> Response:
+    """The EN/RU switch in the header; works before login too."""
+    lang = normalize_language(lang)
+    request.session[LANG_SESSION_KEY] = lang
+    if user is not None:
+        user.language = lang
+        db.commit()
+    return redirect(request, _safe_next(next))
+
+
+@router.post("/settings/preferences", dependencies=[CSRFProtected])
+def save_preferences(
+    request: Request,
+    user: CurrentUser,
+    db: DbSession,
+    language: Annotated[str, Form()] = "",
+    daily_goal: Annotated[str, Form()] = "",
+) -> Response:
+    try:
+        goal = int(daily_goal.strip())
+    except ValueError:
+        goal = -1
+    if not 0 <= goal <= 100:
+        return _settings_page(request, user, status_code=422, goal_error=t("err_goal"))
+    if language in LANGUAGES:
+        user.language = language
+        request.session[LANG_SESSION_KEY] = language
+        set_language(language)  # the flash below is already in the new language
+    user.daily_goal = goal
+    db.commit()
+    flash(request, t("preferences_saved"), "success")
+    return redirect(request, "/settings")
 
 
 @router.post("/settings/password", dependencies=[CSRFProtected])

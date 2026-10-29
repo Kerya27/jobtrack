@@ -37,13 +37,14 @@ def test_parse_prefills_form(alice: Client, fake_site: list[str]) -> None:
     assert 'value="Python vývojář / Backend Developer"' in html
     assert 'value="60000"' in html and 'value="80000"' in html
     assert 'value="Jobs.cz"' in html
-    assert "Данные найдены" in html
+    assert "Details found" in html
 
 
 def test_blocked_site_shows_message_and_fallback(alice: Client, fake_site: list[str]) -> None:
     response = alice.htmx("/applications/parse", {"url": "https://www.linkedin.com/jobs/view/42"})
     assert response.status_code == 200
-    assert "блокируют роботов" in response.text
+    assert "block bots" in response.text
+    assert "Reason: HTTP 999." in response.text  # tells "blocked" apart from a timeout
     assert "mode=text" in response.text  # link to the paste-text fallback
     assert 'value="https://www.linkedin.com/jobs/view/42"' in response.text
 
@@ -54,17 +55,17 @@ def test_blocked_site_shows_message_and_fallback(alice: Client, fake_site: list[
 def test_internal_urls_are_rejected_by_the_endpoint(alice: Client, url: str) -> None:
     response = alice.htmx("/applications/parse", {"url": url})
     assert response.status_code == 200
-    assert "нужен публичный адрес" in response.text
+    assert "public http(s) address" in response.text
 
 
 def test_rate_limit(alice: Client, fake_site: list[str], monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(get_settings(), "parse_rate_limit_per_hour", 2)
     for _ in range(2):
         assert (
-            "Данные найдены" in alice.htmx("/applications/parse", {"url": "https://jobs.cz/1"}).text
+            "Details found" in alice.htmx("/applications/parse", {"url": "https://jobs.cz/1"}).text
         )
     limited = alice.htmx("/applications/parse", {"url": "https://jobs.cz/1"})
-    assert "Слишком много ссылок" in limited.text
+    assert "Too many links" in limited.text
     assert len(fake_site) == 2  # the third request never hit the network
 
 
@@ -73,8 +74,8 @@ def test_rate_limit_is_per_user(
 ) -> None:
     monkeypatch.setattr(get_settings(), "parse_rate_limit_per_hour", 1)
     alice.htmx("/applications/parse", {"url": "https://jobs.cz/1"})
-    assert "Слишком много" in alice.htmx("/applications/parse", {"url": "https://jobs.cz/1"}).text
-    assert "Данные найдены" in bob.htmx("/applications/parse", {"url": "https://jobs.cz/1"}).text
+    assert "Too many" in alice.htmx("/applications/parse", {"url": "https://jobs.cz/1"}).text
+    assert "Details found" in bob.htmx("/applications/parse", {"url": "https://jobs.cz/1"}).text
 
 
 def test_paste_text_fallback(alice: Client) -> None:
@@ -99,3 +100,9 @@ def test_paste_text_fallback(alice: Client) -> None:
 def test_manual_form(alice: Client) -> None:
     response = alice.get("/applications/new", headers={"HX-Request": "true"})
     assert 'name="company"' in response.text and 'name="only_save"' in response.text
+
+
+def test_parse_warns_about_an_existing_application(alice: Client, fake_site: list[str]) -> None:
+    alice.create_app(url="https://www.jobs.cz/rpd/123/", position="Old one")
+    response = alice.htmx("/applications/parse", {"url": "https://www.jobs.cz/rpd/123/"})
+    assert "Looks like a duplicate" in response.text and "Old one" in response.text

@@ -52,6 +52,7 @@ class FetchError(Exception):
     def __init__(self, reason: FetchFailure, detail: str = "") -> None:
         super().__init__(f"{reason}: {detail}" if detail else str(reason))
         self.reason = reason
+        self.detail = detail
 
 
 @dataclass(frozen=True)
@@ -78,7 +79,9 @@ def resolve(host: str, port: int) -> list[str]:
         infos = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
     except (socket.gaierror, UnicodeError) as exc:
         raise FetchError(FetchFailure.NETWORK, f"cannot resolve {host}") from exc
-    return list(dict.fromkeys(str(info[4][0]) for info in infos))
+    addresses = list(dict.fromkeys(str(info[4][0]) for info in infos))
+    # IPv4 first: many containers (free hosting included) have no IPv6 route at all.
+    return sorted(addresses, key=lambda a: ":" in a)
 
 
 def _ensure_public(host: str, port: int) -> list[str]:

@@ -1,5 +1,5 @@
 {# "New application" form, swapped into #new-form by HTMX. #}
-{% from "macros.html" import csrf with context %}
+{% from "macros.html" import badge, csrf with context %}
 <form method="post" action="{{ action }}" hx-post="{{ action }}" hx-target="#new-form"
       hx-disabled-elt="#new-form button" class="app-form">
   {{ csrf() }}
@@ -12,6 +12,21 @@
     </p>
   {% endif %}
 
+  {% if duplicates %}
+    <div class="flash flash-warning duplicate-warning" role="alert">
+      <strong>{{ t("duplicate_title") }}.</strong> {{ t("duplicate_hint") }}
+      <ul>
+        {% for d in duplicates %}
+          <li>
+            <a href="/applications/{{ d.id }}" target="_blank" rel="noopener">{{ d.position }}, {{ d.company }}</a>
+            {% if d.location %}· {{ d.location }}{% endif %} · {{ badge(d.status) }} · {{ (d.applied_at or d.created_at)|d }}
+          </li>
+        {% endfor %}
+      </ul>
+      <input type="hidden" name="confirm_duplicate" value="1">
+    </div>
+  {% endif %}
+
   {% include "partials/app_fields.html" %}
 
   <label class="switch-row">
@@ -20,7 +35,7 @@
   </label>
 
   <div class="form-actions">
-    <button type="submit">{{ t("save") }}</button>
+    <button type="submit">{{ t("save_anyway") if duplicates else t("save") }}</button>
     <button type="button" class="secondary outline" onclick="document.getElementById('new-form').innerHTML = ''">{{ t("cancel") }}</button>
   </div>
 </form>

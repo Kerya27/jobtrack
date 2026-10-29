@@ -45,7 +45,7 @@ def test_login_with_correct_and_wrong_password(anon: Client) -> None:
         "/login", data={"email": "user@example.com", "password": "nope-nope", "csrf_token": token}
     )
     assert wrong.status_code == 401
-    assert "Неверный email или пароль" in wrong.text
+    assert "Wrong email or password" in wrong.text
 
     ok = anon.post(
         "/login",
@@ -63,19 +63,19 @@ def test_register_validation(anon: Client) -> None:
         cases = [
             (
                 {"email": "not-an-email", "password": PASSWORD, "password_repeat": PASSWORD},
-                "не email",
+                "look like an email",
             ),
             (
                 {"email": "a@example.com", "password": "short", "password_repeat": "short"},
-                "8 символов",
+                "8 characters",
             ),
             (
                 {"email": "a@example.com", "password": PASSWORD, "password_repeat": "other-pass"},
-                "не совпадают",
+                "match",
             ),
             (
                 {"email": "taken@example.com", "password": PASSWORD, "password_repeat": PASSWORD},
-                "уже есть",
+                "already registered",
             ),
         ]
         for data, message in cases:
@@ -86,7 +86,7 @@ def test_register_validation(anon: Client) -> None:
 
 def test_registration_can_be_closed(anon: Client, monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(get_settings(), "allow_registration", False)
-    assert "закрыта" in anon.get("/register").text
+    assert "closed" in anon.get("/register").text
     response = anon.post(
         "/register",
         data={

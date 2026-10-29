@@ -209,3 +209,8 @@ def test_pasted_text_does_not_guess_a_wrong_company() -> None:
         parse_pasted_text("Just one long sentence without any structure at all. " * 3).position
         is None
     )
+
+
+def test_baltic_cities_are_recognised_as_location() -> None:
+    job = parse_pasted_text("Investigations Analyst\nGH Office: Vilnius, Lithuania\nWe hire.")
+    assert job.location == "GH Office: Vilnius, Lithuania"

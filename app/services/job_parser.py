@@ -84,6 +84,7 @@ class ParsedJob:
     employment_type: str | None = None
     found_structured_data: bool = False
     error: FetchFailure | None = None
+    error_detail: str = ""  # e.g. "HTTP 403", shown to the user to tell blocking from timeouts
 
     @property
     def needs_manual(self) -> bool:
@@ -407,8 +408,11 @@ def parse_job(url: str, fetch: Callable[[str], FetchedPage] | None = None) -> Pa
     try:
         page = (fetch or fetch_html)(url)
     except FetchError as exc:
-        logger.info("parse failed for %s: %s", source_from_url(url), exc.reason)
-        return ParsedJob(url=url, source=source_from_url(url), error=exc.reason)
+        detail = f"HTTP {exc.detail}" if exc.detail.isdigit() else exc.detail
+        logger.warning("parse failed for %s: %s %s", source_from_url(url), exc.reason, detail)
+        return ParsedJob(
+            url=url, source=source_from_url(url), error=exc.reason, error_detail=detail
+        )
     job = parse_html(page.html, page.url)
     job.url = url  # keep the link the user pasted (not a tracking redirect target)
     return job

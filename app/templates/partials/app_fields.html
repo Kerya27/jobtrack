@@ -37,6 +37,13 @@
   {{ input("source", t("f_source"), values, errors) }}
 </div>
 
+<label>
+  {{ t("f_portal_url") }}
+  <input type="url" name="portal_url" value="{{ values.get('portal_url', '') }}" placeholder="https://"
+         {% if errors.get("portal_url") %}aria-invalid="true"{% endif %}>
+  <small {% if errors.get("portal_url") %}class="field-error"{% endif %}>{{ errors.get("portal_url") or t("f_portal_url_hint") }}</small>
+</label>
+
 <div class="grid">
   <label>
     {{ t("f_resume_version") }}

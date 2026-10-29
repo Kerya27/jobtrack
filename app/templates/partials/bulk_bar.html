@@ -1,0 +1,26 @@
+{# Actions for the rows ticked in the list (checkboxes use form="bulk"). Hidden until something is selected. #}
+{% from "macros.html" import csrf with context %}
+<form id="bulk" class="bulk-bar" method="post" action="/applications/bulk"
+      hx-post="/applications/bulk" hx-target="#results"
+      hx-include="#filters, #status-chips input:checked" hx-disabled-elt="#bulk button" hidden>
+  {{ csrf() }}
+  <div class="bulk-row">
+    <strong data-bulk-count data-template="{{ t('bulk_selected', count='{count}') }}">{{ t("bulk_selected", count=0) }}</strong>
+    <button type="button" class="outline secondary small" data-bulk-all>{{ t("select_all") }}</button>
+    <button type="button" class="outline secondary small" data-bulk-clear>{{ t("clear_selection") }}</button>
+  </div>
+  <div class="bulk-row">
+    <select name="bulk_status" aria-label="{{ t('bulk_status') }}">
+      {% for s in STATUSES %}<option value="{{ s.value }}" {% if s.value == "rejected" %}selected{% endif %}>{{ status_label(s) }}</option>{% endfor %}
+    </select>
+    <button type="submit" name="action" value="status" class="small">{{ t("bulk_status") }}</button>
+    <button type="submit" name="action" value="archive" class="secondary small">{{ t("archive") }}</button>
+    <button type="submit" name="action" value="unarchive" class="secondary outline small">{{ t("unarchive") }}</button>
+  </div>
+  <div class="bulk-row">
+    <input type="text" name="bulk_text" maxlength="5000" placeholder="{{ t('bulk_text_placeholder') }}"
+           aria-label="{{ t('bulk_text_placeholder') }}">
+    <button type="submit" name="action" value="note" class="small">{{ t("bulk_add_note") }}</button>
+    <button type="submit" name="action" value="portal" class="secondary small">{{ t("bulk_set_portal") }}</button>
+  </div>
+</form>

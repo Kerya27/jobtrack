@@ -13,6 +13,7 @@
     {{ badge(app.status) }}
     {% if app.archived %}<span class="badge badge-archived">{{ t("archived_badge") }}</span>{% endif %}
     {% if app.url %}· <a href="{{ app.url }}" target="_blank" rel="noopener noreferrer nofollow">{{ app.source or t("f_url") }} ↗</a>{% endif %}
+    {% if app.portal_url %}· <a href="{{ app.portal_url }}" target="_blank" rel="noopener noreferrer nofollow">{{ t("portal") }} ↗</a>{% endif %}
   </p>
 </hgroup>
 
@@ -29,6 +30,7 @@
     {% include "partials/timeline.html" %}
 
     <div class="card-actions">
+      <a href="/?clone={{ app.id }}#new-form" role="button" class="secondary outline">{{ t("clone") }}</a>
       <form method="post" action="/applications/{{ app.id }}/archive">
         {{ csrf() }}
         <button type="submit" class="secondary outline">{{ t("unarchive") if app.archived else t("archive") }}</button>

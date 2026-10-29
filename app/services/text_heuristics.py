@@ -20,6 +20,8 @@ _CITIES = (
     "kyiv", "київ", "киев", "lviv", "львів", "львов", "dnipro", "дніпро", "kharkiv", "харків",
     "berlin", "berlín", "vienna", "wien", "відень", "bratislava", "братислава",
     "london", "amsterdam", "munich", "münchen", "dublin", "lisbon", "madrid", "barcelona",
+    "vilnius", "вильнюс", "вільнюс", "kaunas", "каунас", "klaipėda", "klaipeda",
+    "riga", "rīga", "рига", "tallinn", "таллин", "таллінн",
 )  # fmt: skip
 _COUNTRY_PAREN = re.compile(r"\w[\w .'-]*\s*\([^)]{2,30}\)")
 _SENTENCE_END = (".", ":", "!", "?", ";")

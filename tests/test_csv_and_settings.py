@@ -50,7 +50,7 @@ def test_export_import_round_trip(alice: Client, bob: Client) -> None:
     assert "'=HYPERLINK" in exported.text  # formula escaped for Excel
 
     report = upload(bob, exported.content)
-    assert "Добавлено: 2, пропущено: 0" in report.text
+    assert "Added: 2, skipped: 0" in report.text
 
     assert rows(bob.get("/export.csv").text) == rows(exported.text)
     bob_items = bob.get("/api/v1/applications?archived=true").json()["items"]
@@ -59,7 +59,7 @@ def test_export_import_round_trip(alice: Client, bob: Client) -> None:
 
     # importing the same file again: everything is a duplicate
     again = upload(bob, exported.content)
-    assert "Добавлено: 0, пропущено: 2" in again.text
+    assert "Added: 0, skipped: 2" in again.text
 
 
 def test_import_excel_style_file(alice: Client) -> None:
@@ -72,10 +72,8 @@ def test_import_excel_style_file(alice: Client) -> None:
         "\n"
     ).encode()
     response = upload(alice, content)
-    assert "Добавлено: 1, пропущено: 3" in response.text
-    assert (
-        "строка 3" in response.text and "строка 4" in response.text and "строка 5" in response.text
-    )
+    assert "Added: 1, skipped: 3" in response.text
+    assert "row 3" in response.text and "row 4" in response.text and "row 5" in response.text
     item = alice.get("/api/v1/applications").json()["items"][0]
     assert (item["company"], item["status"], item["applied_at"]) == (
         "Avast",
@@ -87,7 +85,7 @@ def test_import_excel_style_file(alice: Client) -> None:
 
 def test_import_rejects_bad_files(alice: Client) -> None:
     assert "UTF-8" in upload(alice, "company,position\nŠkoda,Dev\n".encode("cp1250")).text
-    assert "company и position" in upload(alice, b"name,title\nA,B\n").text
+    assert "company and position" in upload(alice, b"name,title\nA,B\n").text
     no_file = alice.post("/import", data={"csrf_token": alice.token})
     assert no_file.status_code == 422
 
@@ -101,7 +99,7 @@ def test_change_password(alice: Client) -> None:
             "password_repeat": "new-password-1",
         },
     )
-    assert wrong.status_code == 422 and "Неверный пароль" in wrong.text
+    assert wrong.status_code == 422 and "Wrong password" in wrong.text
     short = alice.form(
         "/settings/password",
         {

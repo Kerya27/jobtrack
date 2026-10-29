@@ -9,12 +9,14 @@ from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.config import get_settings
 from app.deps import CSRFError, LoginRequiredError
-from app.i18n import t
-from app.routers import api, applications, auth, settings, stats
+from app.i18n import set_language, t
+from app.routers import api, applications, auth, friends, settings, stats
 from app.routers.api import UnprocessableError
+from app.security import LANG_SESSION_KEY
 from app.services.applications import NotFoundError
 from app.web import is_htmx, render
 
@@ -27,6 +29,18 @@ def _is_api(request: Request) -> bool:
     return request.url.path.startswith("/api/")
 
 
+class LanguageMiddleware:
+    """Sets the UI language for the request from the session (must run inside SessionMiddleware)."""
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] == "http":
+            set_language(scope.get("session", {}).get(LANG_SESSION_KEY))
+        await self.app(scope, receive, send)
+
+
 def create_app() -> FastAPI:
     config = get_settings()
     app = FastAPI(
@@ -37,6 +51,8 @@ def create_app() -> FastAPI:
         redoc_url=None,
         openapi_url=None if config.is_prod else "/openapi.json",
     )
+    # Starlette wraps later middleware around earlier ones: the session is decoded first.
+    app.add_middleware(LanguageMiddleware)
     app.add_middleware(
         SessionMiddleware,
         secret_key=config.secret_key,
@@ -66,6 +82,7 @@ def create_app() -> FastAPI:
     app.include_router(applications.router)
     app.include_router(stats.router)
     app.include_router(settings.router)
+    app.include_router(friends.router)
     app.include_router(api.router)
     _register_error_handlers(app)
     return app

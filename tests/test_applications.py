@@ -68,7 +68,7 @@ def test_card_shows_fields_and_timeline(alice: Client) -> None:
     page = alice.get(f"/applications/{app['id']}").text
     assert "Seznam.cz" in page
     assert "Ask about Go" in page
-    assert "Создан со статусом" in page
+    assert "Created with status" in page
 
 
 def test_update_all_fields(alice: Client) -> None:
@@ -148,11 +148,11 @@ def test_add_note_event(alice: Client) -> None:
     )
     assert "Call with CTO on Thursday" in response.text
     empty = alice.htmx(f"/applications/{app['id']}/events", {"type": "note", "text": "   "})
-    assert "Напиши текст события" in empty.text
+    assert "Write the event text" in empty.text
     forged = alice.htmx(
         f"/applications/{app['id']}/events", {"type": "status_change", "text": "fake"}
     )
-    assert "Напиши текст события" in forged.text
+    assert "Write the event text" in forged.text
     events = alice.get(f"/api/v1/applications/{app['id']}/events").json()
     assert [e["type"] for e in events] == ["interview", "status_change"]  # newest first
 

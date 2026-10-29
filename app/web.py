@@ -7,9 +7,17 @@ from fastapi import Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
-from app.i18n import event_type_label, status_label, t, work_mode_label
-from app.models import ApplicationStatus, EventType, WorkMode
+from app.i18n import (
+    LANGUAGE_NAMES,
+    current_language,
+    event_type_label,
+    status_label,
+    t,
+    work_mode_label,
+)
+from app.models import ApplicationStatus, Event, EventType, WorkMode
 from app.security import get_csrf_token
+from app.services.applications import SENT_PERIODS, SORT_ORDERS, normalize_company
 from app.timeutil import format_date, format_datetime
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
@@ -18,6 +26,8 @@ FLASH_SESSION_KEY = "flash"
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 templates.env.globals.update(
     t=t,
+    current_language=current_language,
+    LANGUAGE_NAMES=LANGUAGE_NAMES,
     status_label=status_label,
     work_mode_label=work_mode_label,
     event_type_label=event_type_label,
@@ -26,6 +36,27 @@ templates.env.globals.update(
     USER_EVENT_TYPES=[e for e in EventType if e != EventType.STATUS_CHANGE],
 )
 templates.env.filters.update(dt=format_datetime, d=format_date)
+
+
+def event_text(event: Event) -> str:
+    """Status changes are rendered from from/to_status, so they follow the UI language."""
+    if event.type == EventType.STATUS_CHANGE and event.to_status is not None:
+        if event.from_status is None:
+            return t("status_initial", to=status_label(event.to_status))
+        return t(
+            "status_changed",
+            from_=status_label(event.from_status),
+            to=status_label(event.to_status),
+        )
+    return event.text
+
+
+templates.env.globals.update(
+    event_text=event_text,
+    normalize_company=normalize_company,
+    SENT_PERIODS=SENT_PERIODS,
+    SORT_ORDERS=SORT_ORDERS,
+)
 
 
 def format_salary(salary_min: int | None, salary_max: int | None, currency: str | None) -> str:

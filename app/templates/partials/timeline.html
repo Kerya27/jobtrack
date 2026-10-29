@@ -25,7 +25,7 @@
             <span class="event-type">{{ event_type_label(e.type) }}</span>
             <time>{{ e.created_at|dt }}</time>
           </div>
-          <div class="event-text">{{ e.text }}</div>
+          <div class="event-text">{{ event_text(e) }}</div>
         </li>
       {% endfor %}
     </ol>

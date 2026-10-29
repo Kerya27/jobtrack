@@ -1,15 +1,272 @@
-"""All user-facing strings live here, so another language can be added in one place.
+"""All user-facing strings live here (English and Russian).
 
-Templates call ``t("key")``; Python code uses the same function.
+Templates and Python code call ``t("key")``. The language of the current request is kept in a
+context variable, set by ``LanguageMiddleware`` from the session (see app.main).
 """
 
+from contextvars import ContextVar
 from typing import Final
 
 from app.models import ApplicationStatus, EventType, WorkMode
 
-DEFAULT_LANG: Final = "ru"
+DEFAULT_LANG: Final = "en"
+LANGUAGES: Final = ("en", "ru")
+LANGUAGE_NAMES: Final = {"en": "English", "ru": "Русский"}
+
+_current_lang: ContextVar[str] = ContextVar("jobtrack_lang", default=DEFAULT_LANG)
 
 STRINGS: Final[dict[str, dict[str, str]]] = {
+    "en": {
+        "app_name": "JobTrack",
+        "nav_applications": "Applications",
+        "nav_stats": "Stats",
+        "nav_settings": "Settings",
+        "nav_logout": "Log out",
+        "nav_login": "Log in",
+        "nav_register": "Sign up",
+        "nav_friends": "Friends",
+        "switch_language": "Language",
+        # auth
+        "login_title": "Log in",
+        "register_title": "Sign up",
+        "email": "Email",
+        "password": "Password",
+        "password_repeat": "Repeat password",
+        "password_hint": "At least 8 characters",
+        "login_button": "Log in",
+        "register_button": "Create account",
+        "no_account": "No account yet?",
+        "have_account": "Already have an account?",
+        "registration_closed": "Sign-ups are closed right now. Ask the owner to open them.",
+        "err_invalid_email": "This doesn't look like an email",
+        "err_password_short": "The password must be at least 8 characters long",
+        "err_password_long": "The password is too long (72 bytes max)",
+        "err_password_mismatch": "Passwords don't match",
+        "err_email_taken": "This email is already registered",
+        "err_bad_credentials": "Wrong email or password",
+        "err_csrf": "Your session has expired. Reload the page and try again.",
+        "logged_out": "You have logged out",
+        "welcome": "Account created. Paste your first vacancy link!",
+        # quick add
+        "quick_add_title": "New application",
+        "url_placeholder": "Paste a link to a vacancy",
+        "parse_button": "Get details",
+        "parsing": "Reading the vacancy…",
+        "paste_text_button": "Paste vacancy text",
+        "manual_button": "Fill in manually",
+        "paste_text_title": "Vacancy text",
+        "paste_text_hint": "Paste the whole vacancy text here: I'll pick out the position, company, location and salary, and keep the rest as the description.",
+        "paste_text_submit": "Parse text",
+        "parse_ok": "Details found. Check them and save.",
+        "parse_partial": "Found only a little. Check the fields and fill in the rest.",
+        "parse_failed": "Couldn't get the details. Fill them in manually or paste the vacancy text.",
+        "parse_blocked_site": "The site refused to give the page to the server (LinkedIn, Indeed and some others block bots, and some sites block hosting servers). Paste the vacancy text instead.",
+        "parse_bad_url": "This link can't be opened: it must be a public http(s) address.",
+        "parse_network": "Couldn't load the page (timeout or the site is unavailable). Fill in manually or paste the vacancy text.",
+        "parse_too_big": "The page is too big to parse. Fill in manually or paste the vacancy text.",
+        "parse_not_html": "The link doesn't point to an HTML page. Fill in manually or paste the vacancy text.",
+        "parse_rate_limited": "Too many links in an hour (limit {limit}). Wait a bit or fill in manually.",
+        "parse_reason": "Reason: {detail}.",
+        "text_parsed_salary": "Found the salary in the text. Check it.",
+        "text_parsed_no_salary": "No salary in the text. The text is kept as the description.",
+        "only_save": "Just save for now (haven't applied yet)",
+        "save": "Save",
+        "cancel": "Cancel",
+        "saved_ok": "Saved",
+        "created_ok": "Application added",
+        "duplicate_title": "Looks like a duplicate",
+        "duplicate_hint": "You already have an application with the same link, or the same company, position and location:",
+        "save_anyway": "Save anyway",
+        "clone": "Duplicate",
+        "clone_title": "Copy of an existing application: change the location, link or anything else.",
+        # fields
+        "f_company": "Company",
+        "f_position": "Position",
+        "f_url": "Link",
+        "f_source": "Source",
+        "f_location": "Location",
+        "f_work_mode": "Work mode",
+        "f_salary_min": "Salary from",
+        "f_salary_max": "Salary to",
+        "f_salary_currency": "Currency",
+        "f_description": "Description",
+        "f_resume_version": "Resume version",
+        "f_resume_version_hint": "E.g. backend-v2, to compare which resume works better",
+        "f_contact_name": "Contact",
+        "f_contact_email": "Contact email",
+        "f_status": "Status",
+        "f_applied_at": "Applied on",
+        "f_notes": "Notes",
+        "f_portal_url": "Candidate portal",
+        "f_portal_url_hint": "The company page with all your applications (e.g. Workday). Filled in automatically for the same company.",
+        "section_salary": "Salary",
+        "section_contact": "Contact",
+        "more_fields": "More fields",
+        "err_required": "Required field",
+        "err_too_long": "Too long ({max} characters max)",
+        "err_url": "Needs a link like https://…",
+        "err_int": "Needs a whole number",
+        "err_negative": "Can't be negative",
+        "err_salary_range": '"To" can\'t be less than "from"',
+        "err_currency": "A 3-letter currency code, e.g. EUR",
+        "err_date": "Invalid date",
+        "err_invalid": "Invalid value",
+        # list
+        "search_placeholder": "Search by company or position",
+        "show_archive": "Show archive",
+        "all": "All",
+        "empty_list": "No applications yet. Paste your first link above.",
+        "empty_filtered": "Nothing found. Try resetting the filters.",
+        "last_activity": "Last activity",
+        "open": "Open",
+        "applied_on": "applied {date}",
+        "archived_badge": "archived",
+        "change_status": "Change status",
+        "portal": "Portal",
+        "friend_applied": "Also applied: {names}",
+        "today_chip": "Today {count}/{goal}",
+        "today_chip_no_goal": "Today {count}",
+        "today_chip_title": "Applications sent today. Click to show only them.",
+        "filters": "Filters",
+        "filter_sent": "Applied",
+        "filter_any": "Any",
+        "sent_today": "Today",
+        "sent_7d": "Last 7 days",
+        "sent_30d": "Last 30 days",
+        "sort": "Sort",
+        "sort_activity": "Recent activity",
+        "sort_applied": "Application date",
+        "sort_company": "Company A–Z",
+        "sort_salary": "Salary, highest first",
+        "reset_filters": "Reset filters",
+        "view_list": "List",
+        "view_board": "Board",
+        "board_hint": "Drag cards between columns to change the status.",
+        "select_row": "Select",
+        # bulk actions
+        "bulk_selected": "Selected: {count}",
+        "select_all": "Select all",
+        "clear_selection": "Clear",
+        "bulk_status": "Set status",
+        "apply": "Apply",
+        "bulk_text_placeholder": "Note or link for all selected",
+        "bulk_add_note": "Add note",
+        "bulk_set_portal": "Set as portal link",
+        "bulk_done": "Updated: {count}",
+        "bulk_nothing": "Select at least one application",
+        "bulk_need_text": "Type the text first",
+        "bulk_bad_portal": "The portal link must start with http:// or https://",
+        # card
+        "back_to_list": "← All applications",
+        "timeline": "Timeline",
+        "timeline_empty": "No events yet.",
+        "add_event": "Add event",
+        "event_text": "Text",
+        "event_text_placeholder": "E.g. HR called, interview scheduled for Thursday",
+        "event_added": "Event added",
+        "err_event_text": "Write the event text",
+        "archive": "Archive",
+        "unarchive": "Unarchive",
+        "archived_ok": "Application archived",
+        "unarchived_ok": "Application restored from the archive",
+        "delete": "Delete",
+        "delete_confirm": "Delete this application with its whole history? This can't be undone.",
+        "deleted_ok": "Application deleted",
+        "status_changed": "Status: {from_} → {to}",
+        "status_initial": 'Created with status "{to}"',
+        "not_found": "Not found",
+        "not_found_text": "This page doesn't exist or you don't have access to it.",
+        # friends
+        "friends_title": "Friends",
+        "friends_intro": "Add a friend by email. Once they accept, you both see each other's applications: everything, including notes and salaries. You can only look, not edit.",
+        "friends_add": "Add a friend",
+        "friends_email": "Friend's email in JobTrack",
+        "friends_send": "Send request",
+        "friends_request_sent": "Request sent. If {email} has a JobTrack account, they'll see it on their Friends page.",
+        "friends_self": "That's your own email :)",
+        "friends_already": "You are already friends or a request is already pending.",
+        "friends_incoming": "Requests for you",
+        "friends_outgoing": "Waiting for an answer",
+        "friends_list": "Your friends",
+        "friends_none": "No friends yet. Send a request by email.",
+        "friends_accept": "Accept",
+        "friends_decline": "Decline",
+        "friends_cancel": "Cancel request",
+        "friends_remove": "Remove",
+        "friends_remove_confirm": "Remove this friend? You'll stop seeing each other's applications.",
+        "friends_accepted": "You are now friends with {email}",
+        "friends_removed": "Done",
+        "friends_open": "Open tracker",
+        "friends_count": "{count} applications",
+        "friend_view_title": "{name}'s applications",
+        "friend_readonly": "Your friend's tracker, read-only.",
+        "friend_empty": "No applications yet.",
+        "friends_incoming_notice": "Friend requests waiting for you: {count}. Open Friends →",
+        "back_to_friends": "← Friends",
+        # stats
+        "stats_title": "Stats",
+        "stats_total": "Total applications",
+        "stats_active": "Active",
+        "stats_response_rate": "Response rate",
+        "stats_avg_days": "Days to first response",
+        "stats_by_status": "By status",
+        "stats_funnel": "Funnel",
+        "stats_funnel_hint": "Built from history: an application that reached an interview and was then rejected still counts as an interview. A response is any reaction from the company, including a rejection.",
+        "funnel_applied": "Applied",
+        "funnel_replied": "Got a response",
+        "funnel_interview": "Interview / test task",
+        "funnel_offer": "Offer",
+        "stats_by_source": "By source",
+        "stats_by_resume": "By resume version",
+        "stats_weekly": "Applications per week (last 12)",
+        "col_group": "Group",
+        "col_applied": "Applied",
+        "col_replied": "Responses",
+        "col_rate": "Response rate",
+        "col_interviews": "Interviews",
+        "col_interview_rate": "Interview %",
+        "not_set": "not set",
+        "stats_empty": "Stats will appear once you have at least one application.",
+        "week_of": "week of {date}",
+        # settings
+        "settings_title": "Settings",
+        "account": "Account",
+        "preferences": "Preferences",
+        "language": "Interface language",
+        "daily_goal": "Daily goal (applications per day)",
+        "daily_goal_hint": 'Shown as "Today 3/5" above the list. 0 = no goal, just the count.',
+        "err_goal": "A number from 0 to 100",
+        "preferences_saved": "Preferences saved",
+        "change_password": "Change password",
+        "current_password": "Current password",
+        "new_password": "New password",
+        "password_changed": "Password changed",
+        "err_wrong_password": "Wrong password",
+        "data_title": "Data",
+        "export_csv": "Download CSV",
+        "export_hint": "All applications as CSV (UTF-8). The same format works for import.",
+        "import_csv": "Import from CSV",
+        "import_hint": "Columns as in the export; company and position are required. Separator: comma or semicolon.",
+        "import_button": "Import",
+        "import_report": "Added: {added}, skipped: {skipped}",
+        "import_no_file": "Choose a CSV file",
+        "import_bad_file": "Couldn't read the file: {error}",
+        "danger_zone": "Delete account",
+        "delete_account_hint": "Deletes the account and all applications for good.",
+        "delete_account": "Delete account forever",
+        "delete_account_confirm": "Really delete the account and all data?",
+        "account_deleted": "Account and all data deleted",
+        "csv_row": "row {row}: {reason}",
+        "csv_too_big": "the file is larger than 5 MB",
+        "csv_not_utf8": 'the file is not UTF-8. Save it as "CSV UTF-8"',
+        "csv_empty": "the file is empty",
+        "csv_no_columns": "company and position columns are required",
+        "csv_too_many_rows": "more than {max} rows",
+        "employment_type": "Employment type: {value}",
+        "csv_duplicate": "this application already exists",
+        "csv_missing": "no company or position",
+        "csv_bad_value": "invalid value in column {column}",
+    },
     "ru": {
         "app_name": "JobTrack",
         "nav_applications": "Отклики",
@@ -47,12 +304,12 @@ STRINGS: Final[dict[str, dict[str, str]]] = {
         "paste_text_button": "Вставить текст вакансии",
         "manual_button": "Заполнить вручную",
         "paste_text_title": "Текст вакансии",
-        "paste_text_hint": "Скопируй сюда текст вакансии целиком: найду зарплату, остальное сохраню в описание.",
+        "paste_text_hint": "Скопируй сюда текст вакансии целиком: найду позицию, компанию, локацию и зарплату, остальное сохраню в описание.",
         "paste_text_submit": "Разобрать текст",
         "parse_ok": "Данные найдены — проверь и сохрани.",
         "parse_partial": "Нашёл немного. Проверь поля и дополни вручную.",
         "parse_failed": "Не удалось вытащить данные, заполни вручную или вставь текст вакансии.",
-        "parse_blocked_site": "Сайт не отдал страницу (LinkedIn, Indeed и некоторые другие блокируют роботов). Заполни вручную или вставь текст вакансии.",
+        "parse_blocked_site": "Сайт не отдал страницу серверу (LinkedIn, Indeed и некоторые другие блокируют роботов, а часть сайтов блокирует хостинги). Вставь текст вакансии.",
         "parse_bad_url": "Эту ссылку нельзя открыть: нужен публичный адрес http(s).",
         "parse_network": "Не получилось загрузить страницу (таймаут или сайт недоступен). Заполни вручную или вставь текст вакансии.",
         "parse_too_big": "Страница слишком большая для разбора. Заполни вручную или вставь текст вакансии.",
@@ -183,10 +440,97 @@ STRINGS: Final[dict[str, dict[str, str]]] = {
         "csv_duplicate": "уже есть такой отклик",
         "csv_missing": "нет company или position",
         "csv_bad_value": "неверное значение в колонке {column}",
-    }
+        # added with friends / bulk actions / board / language switch
+        "nav_friends": "Друзья",
+        "switch_language": "Язык",
+        "parse_reason": "Причина: {detail}.",
+        "duplicate_title": "Похоже на дубль",
+        "duplicate_hint": "У тебя уже есть отклик с той же ссылкой или с той же компанией, позицией и локацией:",
+        "save_anyway": "Всё равно сохранить",
+        "clone": "Дублировать",
+        "clone_title": "Копия существующего отклика: поменяй локацию, ссылку или что нужно.",
+        "f_portal_url": "Портал кандидата",
+        "f_portal_url_hint": "Страница компании со всеми твоими откликами (например, Workday). Подставляется сама для той же компании.",
+        "portal": "Портал",
+        "friend_applied": "Тоже откликались: {names}",
+        "today_chip": "Сегодня {count}/{goal}",
+        "today_chip_no_goal": "Сегодня {count}",
+        "today_chip_title": "Отклики, отправленные сегодня. Нажми, чтобы показать только их.",
+        "filters": "Фильтры",
+        "filter_sent": "Отправлен",
+        "filter_any": "Любой",
+        "sent_today": "Сегодня",
+        "sent_7d": "За 7 дней",
+        "sent_30d": "За 30 дней",
+        "sort": "Сортировка",
+        "sort_activity": "По активности",
+        "sort_applied": "По дате отклика",
+        "sort_company": "Компания А–Я",
+        "sort_salary": "Зарплата, сначала выше",
+        "reset_filters": "Сбросить фильтры",
+        "view_list": "Список",
+        "view_board": "Доска",
+        "board_hint": "Перетаскивай карточки между колонками, чтобы сменить статус.",
+        "select_row": "Выбрать",
+        "bulk_selected": "Выбрано: {count}",
+        "select_all": "Выбрать все",
+        "clear_selection": "Снять выбор",
+        "bulk_status": "Сменить статус",
+        "apply": "Применить",
+        "bulk_text_placeholder": "Заметка или ссылка для всех выбранных",
+        "bulk_add_note": "Добавить заметку",
+        "bulk_set_portal": "Сделать ссылкой на портал",
+        "bulk_done": "Обновлено: {count}",
+        "bulk_nothing": "Выбери хотя бы один отклик",
+        "bulk_need_text": "Сначала введи текст",
+        "bulk_bad_portal": "Ссылка на портал должна начинаться с http:// или https://",
+        "friends_title": "Друзья",
+        "friends_intro": "Добавь друга по email. Когда он подтвердит, вы оба видите отклики друг друга: всё, включая заметки и зарплаты. Только смотреть, без редактирования.",
+        "friends_add": "Добавить друга",
+        "friends_email": "Email друга в JobTrack",
+        "friends_send": "Отправить запрос",
+        "friends_request_sent": "Запрос отправлен. Если у {email} есть аккаунт в JobTrack, он увидит его на странице «Друзья».",
+        "friends_self": "Это твой собственный email :)",
+        "friends_already": "Вы уже друзья или запрос уже отправлен.",
+        "friends_incoming": "Запросы тебе",
+        "friends_outgoing": "Ждут ответа",
+        "friends_list": "Твои друзья",
+        "friends_none": "Пока никого. Отправь запрос по email.",
+        "friends_accept": "Принять",
+        "friends_decline": "Отклонить",
+        "friends_cancel": "Отменить запрос",
+        "friends_remove": "Удалить",
+        "friends_remove_confirm": "Удалить из друзей? Вы перестанете видеть отклики друг друга.",
+        "friends_accepted": "Теперь вы друзья с {email}",
+        "friends_removed": "Готово",
+        "friends_open": "Открыть трекер",
+        "friends_count": "Откликов: {count}",
+        "friend_view_title": "Отклики {name}",
+        "friend_readonly": "Трекер друга, только просмотр.",
+        "friend_empty": "Откликов пока нет.",
+        "friends_incoming_notice": "Тебя ждут запросы в друзья: {count}. Открыть «Друзья» →",
+        "back_to_friends": "← Друзья",
+        "preferences": "Предпочтения",
+        "language": "Язык интерфейса",
+        "daily_goal": "Цель на день (откликов в день)",
+        "daily_goal_hint": "Показывается как «Сегодня 3/5» над списком. 0 = без цели, только количество.",
+        "err_goal": "Число от 0 до 100",
+        "preferences_saved": "Настройки сохранены",
+    },
 }
 
 STATUS_LABELS: Final[dict[str, dict[ApplicationStatus, str]]] = {
+    "en": {
+        ApplicationStatus.SAVED: "Saved",
+        ApplicationStatus.APPLIED: "Applied",
+        ApplicationStatus.REPLIED: "Replied",
+        ApplicationStatus.INTERVIEW: "Interview",
+        ApplicationStatus.TEST_TASK: "Test task",
+        ApplicationStatus.OFFER: "Offer",
+        ApplicationStatus.REJECTED: "Rejected",
+        ApplicationStatus.GHOSTED: "Ghosted",
+        ApplicationStatus.WITHDRAWN: "Withdrawn",
+    },
     "ru": {
         ApplicationStatus.SAVED: "Сохранён",
         ApplicationStatus.APPLIED: "Отклик отправлен",
@@ -197,40 +541,66 @@ STATUS_LABELS: Final[dict[str, dict[ApplicationStatus, str]]] = {
         ApplicationStatus.REJECTED: "Отказ",
         ApplicationStatus.GHOSTED: "Молчат",
         ApplicationStatus.WITHDRAWN: "Отозван",
-    }
+    },
 }
 
 WORK_MODE_LABELS: Final[dict[str, dict[WorkMode, str]]] = {
+    "en": {
+        WorkMode.ONSITE: "On-site",
+        WorkMode.HYBRID: "Hybrid",
+        WorkMode.REMOTE: "Remote",
+        WorkMode.UNKNOWN: "Not specified",
+    },
     "ru": {
         WorkMode.ONSITE: "Офис",
         WorkMode.HYBRID: "Гибрид",
         WorkMode.REMOTE: "Удалёнка",
         WorkMode.UNKNOWN: "Не указано",
-    }
+    },
 }
 
 EVENT_TYPE_LABELS: Final[dict[str, dict[EventType, str]]] = {
+    "en": {
+        EventType.STATUS_CHANGE: "Status",
+        EventType.NOTE: "Note",
+        EventType.INTERVIEW: "Interview",
+        EventType.MESSAGE: "Message",
+    },
     "ru": {
         EventType.STATUS_CHANGE: "Статус",
         EventType.NOTE: "Заметка",
         EventType.INTERVIEW: "Интервью",
         EventType.MESSAGE: "Сообщение",
-    }
+    },
 }
 
 
-def t(key: str, lang: str = DEFAULT_LANG, **params: object) -> str:
-    text = STRINGS[lang].get(key, key)
+def normalize_language(value: str | None) -> str:
+    return value if value in LANGUAGES else DEFAULT_LANG
+
+
+def current_language() -> str:
+    return _current_lang.get()
+
+
+def set_language(lang: str | None) -> None:
+    """Set the language for the rest of the current request (or test)."""
+    _current_lang.set(normalize_language(lang))
+
+
+def t(key: str, lang: str | None = None, **params: object) -> str:
+    table = STRINGS[lang or _current_lang.get()]
+    text = table.get(key) or STRINGS[DEFAULT_LANG].get(key, key)
     return text.format(**params) if params else text
 
 
-def status_label(status: ApplicationStatus | str, lang: str = DEFAULT_LANG) -> str:
-    return STATUS_LABELS[lang][ApplicationStatus(status)]
+def status_label(status: ApplicationStatus | str, lang: str | None = None) -> str:
+    return STATUS_LABELS[lang or _current_lang.get()][ApplicationStatus(status)]
 
 
-def work_mode_label(mode: WorkMode | str, lang: str = DEFAULT_LANG) -> str:
-    return WORK_MODE_LABELS[lang][WorkMode(mode)]
+def work_mode_label(mode: WorkMode | str, lang: str | None = None) -> str:
+    return WORK_MODE_LABELS[lang or _current_lang.get()][WorkMode(mode)]
 
 
-def event_type_label(event_type: EventType | str, lang: str = DEFAULT_LANG) -> str:
-    return EVENT_TYPE_LABELS[lang][EventType(event_type)]
+def event_type_label(event_type: EventType | str, lang: str | None = None) -> str:
+    return EVENT_TYPE_LABELS[lang or _current_lang.get()][EventType(event_type)]

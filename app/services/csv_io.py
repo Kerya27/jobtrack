@@ -28,6 +28,7 @@ COLUMNS: tuple[str, ...] = (
     "status",
     "applied_at",
     "url",
+    "portal_url",
     "source",
     "location",
     "work_mode",
@@ -126,11 +127,12 @@ def _unescape_formula(value: str) -> str:
     return value
 
 
-def _lookup(value: str, enum_cls: Any, labels: dict[Any, str]) -> str:
-    """Accept both the code ("interview") and the UI label ("Интервью")."""
+def _lookup(value: str, enum_cls: Any, labels: dict[str, dict[Any, str]]) -> str:
+    """Accept the code ("interview") and the UI label in any language ("Interview", "Интервью")."""
     normalized = value.strip().lower()
     for member in enum_cls:
-        if normalized in {member.value, labels[member].lower()}:
+        names = {member.value} | {by_lang[member].lower() for by_lang in labels.values()}
+        if normalized in names:
             return str(member.value)
     return normalized
 
@@ -170,9 +172,9 @@ def _row_to_data(row: dict[str, str]) -> dict[str, Any]:
             continue
         data[column] = _unescape_formula(raw.strip())
     if data.get("status"):
-        data["status"] = _lookup(data["status"], ApplicationStatus, STATUS_LABELS["ru"])
+        data["status"] = _lookup(data["status"], ApplicationStatus, STATUS_LABELS)
     if data.get("work_mode"):
-        data["work_mode"] = _lookup(data["work_mode"], WorkMode, WORK_MODE_LABELS["ru"])
+        data["work_mode"] = _lookup(data["work_mode"], WorkMode, WORK_MODE_LABELS)
     if "applied_at" in data:
         try:
             data["applied_at"] = _parse_date(data["applied_at"])

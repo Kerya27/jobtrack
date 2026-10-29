@@ -6,8 +6,9 @@ Paste a link to a vacancy → JobTrack downloads the page, pulls out company, po
 salary and description, and keeps a timeline for every application. The stats page shows what
 actually works: the funnel, response rate **per resume version** and per job board.
 
-Multi-user (send a friend the link, everyone has their own data), mobile-friendly, and it runs on
-free hosting. Built as a backend portfolio project.
+Multi-user with friends (accept a friend request and you see each other's trackers), a kanban
+board, bulk actions, a daily goal, English and Russian UI, mobile-friendly, and it runs on free
+hosting. Built as a backend portfolio project.
 
 <!-- Screenshots: add docs/list.png, docs/stats.png and reference them here -->
 
@@ -26,8 +27,24 @@ pytest · Ruff · Docker · GitHub Actions
 - **Fallback for sites that block bots** (LinkedIn, Indeed): paste the vacancy text; a regex
   heuristic finds the salary (`60 000–80 000 Kč`, `€3000`, `60-80k EUR`, `від 40 000 грн`, `до 3000$`…),
   the rest becomes the description.
-- **List** sorted by last activity, status chips with counters, live search, archive toggle,
-  one-click status change right in the list (HTMX, no reload).
+- **List** with status chips and counters, live search, archive toggle, one-click status change
+  right in the list (HTMX, no reload). **Filters** by applied date (today / 7 / 30 days), work
+  mode, source and resume version; sorting by activity, application date, company or salary.
+  Filters live in the URL, so a filtered view can be bookmarked.
+- **"Today 3/5" chip**: applications sent today against a daily goal (set in Settings); one click
+  shows exactly those.
+- **Board view**: a kanban column per status; drag a card to change its status (on touch screens
+  there is a small select on each card instead).
+- **Bulk actions**: tick rows (Shift+click for a range) → change status, archive/unarchive, add the
+  same note to all, or set the company's candidate-portal link.
+- **Candidate portal link** per application, shown in the list (e.g. the Workday "My
+  applications" page) and filled in automatically for the next application to the same company.
+- **Duplicate warning** when the link, or company + position + location, is already in the
+  tracker (asked once, "Save anyway" goes through). **Duplicate** button on the card for "same
+  company, another city".
+- **Friends**: send a request by email; once accepted, both see each other's applications
+  read-only, and your list marks companies a friend has already applied to.
+- **English / Russian UI**, switchable in the header (remembered per account).
 - **Card**: every field editable, timeline (status changes are logged automatically, plus notes /
   interviews / messages), archive, delete.
 - **Stats**: totals, funnel applied → response → interview → offer, response rate by resume version
@@ -64,11 +81,13 @@ ruff check . && ruff format --check . && pytest              # SQLite
 TEST_DATABASE_URL=postgresql://user:pass@localhost:5432/jobtrack_test pytest   # same suite on Postgres
 ```
 
-The suite (~120 tests) covers auth and data isolation, CRUD and the timeline, the parser on saved
+The suite (~150 tests) covers auth and data isolation, CRUD and the timeline, the parser on saved
 HTML fixtures (JSON-LD / OpenGraph only / empty page), SSRF blocking (localhost,
 169.254.169.254, 10.0.0.1, redirects to internal addresses, DNS rebinding), rate limiting, the
-stats funnel on a known data set, and a CSV export → import round trip. The schema is built with
-Alembic, so migrations are tested as well. CI runs lint, tests on SQLite **and** PostgreSQL, and a
+stats funnel on a known data set, a CSV export → import round trip, filters and the board, bulk
+actions (including ids of another user's rows), duplicates, friends' read-only access and the
+language switch. The schema is built with Alembic, and a test checks that the migrations match
+the models and downgrade cleanly. CI runs lint, tests on SQLite **and** PostgreSQL, and a
 Docker Compose smoke test.
 
 Try the parser on a real page without starting the app:
@@ -104,7 +123,13 @@ Free tiers change — **check the current limits** before relying on them. As of
    Render passes `$PORT`; the container applies migrations and starts uvicorn on it.
 3. Open `https://<your-app>.onrender.com` and register.
 
+Updates: push to GitHub and Render redeploys; new migrations run on start, existing data stays.
+
 Notes:
+- **Parsing by link can work locally and fail on Render.** Some job boards (and Cloudflare in
+  front of them) refuse requests from data-centre IP ranges that free hosts use, while your home
+  IP is fine. The form now shows the reason (e.g. "HTTP 403" vs a timeout); for such sites use
+  "Paste vacancy text", which extracts the same fields.
 - A free Render service **sleeps after 15 minutes without traffic**; the first request after that
   takes ~30–60 s. Fine for a personal tracker. If it bothers you, point a free uptime monitor at
   `/healthz` (keep within the free instance-hours budget).
@@ -134,8 +159,11 @@ app/
   security.py      bcrypt, CSRF tokens, session rotation
   i18n.py          every UI string (ru), ready for another language
   web.py           template rendering, flash messages, HTMX helpers
-  routers/         auth, applications (pages + HTMX fragments), stats, settings (+CSV), api (/api/v1)
-  services/        applications, job_parser, salary, ssrf, rate_limit, stats, csv_io
+  routers/         auth, applications (list/board, HTMX fragments, bulk), friends, stats,
+                   settings (+language, CSV), api (/api/v1)
+  services/        applications, friends, job_parser, text_heuristics, salary, ssrf,
+                   rate_limit, stats, csv_io
+  static/          app.css, app.js (bulk selection, Today chip, board drag & drop; optional)
   templates/       Jinja2 pages and partials/ for HTMX
 alembic/           migrations
 tests/             pytest + fixtures/*.html
@@ -200,4 +228,26 @@ Things the spec left open, and why they were decided this way:
   (clearer than one `POST /settings` with an action field). Deleting the account requires the password.
 - **Quick-add redirects to the list** after saving; edits on the card redirect back to the card.
 - **CDN assets are pinned with SRI hashes** (Pico.css 2.1.1, htmx 2.0.11).
-- **UI language is Russian**, all strings are in `app/i18n.py`; code, README and API are English.
+- **UI language: English by default, Russian available.** All strings are in `app/i18n.py` (a test
+  checks both languages have the same keys). The language of a request is a `ContextVar` set by a
+  small ASGI middleware from the session; it is stored on the user and restored at login, and it
+  survives logout. Status-change events are rendered from `from_status`/`to_status`, so the
+  timeline follows the current language.
+- **Friends see everything, read-only.** No per-application privacy: the point is to see where a
+  friend has applied and how it went. Access is checked in one place (`friends.get_friend`);
+  the friend's pages never render edit controls, and the normal endpoints still 404 on someone
+  else's data. A friend request to an unknown email gets the same answer as a real one, so the
+  form doesn't reveal who is registered; asking someone who already asked you accepts it.
+- **"Sent today"** = `applied_at` is today (in `DISPLAY_TIMEZONE`) and status isn't `saved`. The chip
+  count uses the same query as the filter, so the number always matches what a click shows.
+- **Duplicates**: same URL (ignoring a trailing slash), or same company (normalized: case,
+  punctuation, legal suffixes like s.r.o./UAB/Inc) + position + location; an empty location
+  matches any city. It is a warning, not a constraint: applying twice can be intentional.
+- **Bulk actions** run in one transaction, accept at most 500 ids, and silently skip ids that
+  belong to someone else (they are filtered by `user_id` in the same query).
+- **Board drag & drop** reuses the regular status endpoint via `htmx.ajax`, so history and
+  counters are updated exactly as with the select. Without JavaScript everything still works.
+- **Clean URLs**: list/board fragments return an `HX-Push-Url` header built from the parsed
+  filters, so the address bar shows `/?sent=today` rather than every empty form field.
+- **IPv4 first** when fetching vacancy pages: many containers have no IPv6 route, and trying an
+  AAAA address first can eat the whole timeout.

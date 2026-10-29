@@ -112,12 +112,12 @@ def test_empty_stats() -> None:
 
 
 def test_stats_page_end_to_end(alice: Client) -> None:
-    assert "появится" in alice.get("/stats").text
+    assert "will appear" in alice.get("/stats").text
     first = alice.create_app(resume_version="backend-v2", source="Jobs.cz")
     alice.create_app(resume_version="backend-v1", source="LinkedIn")
     alice.htmx(f"/applications/{first['id']}/status", {"new_status": "interview"})
 
     page = alice.get("/stats").text
-    assert "Воронка" in page
+    assert "Funnel" in page
     assert "backend-v2" in page and "backend-v1" in page
     assert "50%" in page  # overall response rate: 1 of 2

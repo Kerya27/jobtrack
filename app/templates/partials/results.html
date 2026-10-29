@@ -1,11 +1,16 @@
+{% if bulk_message %}
+  <p class="flash flash-{{ bulk_message.kind }}" role="status">{{ bulk_message.message }}</p>
+{% endif %}
 {% include "partials/chips.html" %}
 
-{% if apps %}
+{% if total == 0 and count_all == 0 and not filters.q and not filters.extra_count %}
+  <p class="empty">{{ t("friend_empty") if readonly else t("empty_list") }}</p>
+{% elif view == "board" %}
+  {% include "partials/board.html" %}
+{% elif apps %}
   <div class="app-list">
     {% for app in apps %}{% include "partials/app_row.html" %}{% endfor %}
   </div>
-{% elif count_all == 0 and not filters.q %}
-  <p class="empty">{{ t("empty_list") }}</p>
 {% else %}
   <p class="empty">{{ t("empty_filtered") }}</p>
 {% endif %}

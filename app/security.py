@@ -9,6 +9,7 @@ BCRYPT_MAX_BYTES = 72
 CSRF_SESSION_KEY = "csrf_token"
 CSRF_FORM_FIELD = "csrf_token"
 CSRF_HEADER = "x-csrf-token"
+LANG_SESSION_KEY = "lang"
 
 
 def hash_password(password: str) -> str:
@@ -32,9 +33,15 @@ def get_csrf_token(request: Request) -> str:
 
 
 def rotate_session(request: Request) -> None:
-    """Drop everything in the session (prevents session fixation on login/logout)."""
+    """Drop everything in the session (prevents session fixation on login/logout).
+
+    Only the interface language survives: logging out shouldn't switch the UI language.
+    """
+    lang = request.session.get(LANG_SESSION_KEY)
     request.session.clear()
     request.session[CSRF_SESSION_KEY] = secrets.token_urlsafe(32)
+    if lang:
+        request.session[LANG_SESSION_KEY] = lang
 
 
 def csrf_token_is_valid(request: Request, submitted: str | None) -> bool:

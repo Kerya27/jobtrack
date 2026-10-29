@@ -2,6 +2,10 @@
 {% from "macros.html" import csrf with context %}
 
 {% block content %}
+{% if incoming_requests %}
+  <p class="flash flash-info" role="status"><a href="/friends">{{ t("friends_incoming_notice", count=incoming_requests) }}</a></p>
+{% endif %}
+
 <article class="quick-add">
   <form hx-post="/applications/parse" hx-target="#new-form" hx-indicator="#parse-indicator"
         hx-disabled-elt="find button" action="/applications/parse" method="post">
@@ -18,22 +22,16 @@
     <a href="#" hx-get="/applications/new" hx-target="#new-form">{{ t("manual_button") }}</a>
   </p>
   <p id="parse-indicator" class="htmx-indicator" aria-busy="true">{{ t("parsing") }}</p>
-  <div id="new-form"></div>
+  <div id="new-form">
+    {%- if new_form %}{% with values=new_form["values"], errors=new_form["errors"], message=new_form["message"], message_kind=new_form["message_kind"], offer_text_fallback=false, duplicates=[], action=new_form["action"], mode="new", resume_versions=new_form["resume_versions"] %}{% include "partials/app_form.html" %}{% endwith %}{% endif -%}
+  </div>
 </article>
 
-<form id="filters" class="filters" action="/" method="get"
-      hx-get="/" hx-target="#results" hx-push-url="true"
-      hx-trigger="submit, input changed delay:300ms from:#q, change from:#archived"
-      hx-include="#results input[name=status]:checked">
-  <input type="search" id="q" name="q" value="{{ filters.q or '' }}"
-         placeholder="{{ t('search_placeholder') }}" aria-label="{{ t('search_placeholder') }}">
-  <label class="archive-toggle">
-    <input type="checkbox" id="archived" name="archived" value="1" role="switch" {% if filters.archived %}checked{% endif %}>
-    {{ t("show_archive") }}
-  </label>
-</form>
+{% include "partials/filters.html" %}
 
 <div id="results">
   {% include "partials/results.html" %}
 </div>
+
+{% include "partials/bulk_bar.html" %}
 {% endblock %}

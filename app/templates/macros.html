@@ -29,3 +29,13 @@
 {% macro csrf() -%}
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 {%- endmacro %}
+
+{# Salary, source, portal link and "a friend applied here too" for list rows and board cards. #}
+{% macro app_meta(app) -%}
+{% set salary = format_salary(app.salary_min, app.salary_max, app.salary_currency) %}
+{% if salary %}<span>{{ salary }}</span>{% endif %}
+{% if app.source %}<span>{{ app.source }}</span>{% endif %}
+{% if app.portal_url %}<a href="{{ app.portal_url }}" class="portal-link" target="_blank" rel="noopener noreferrer nofollow">{{ t("portal") }} ↗</a>{% endif %}
+{% set names = friend_companies.get(normalize_company(app.company)) if friend_companies else none %}
+{% if names %}<span class="friend-badge">{{ t("friend_applied", names=names|join(", ")) }}</span>{% endif %}
+{%- endmacro %}

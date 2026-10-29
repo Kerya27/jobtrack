@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="{{ current_language() }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,6 +14,7 @@
   <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.11/dist/htmx.min.js"
           integrity="sha384-2OatzQy1H+Zd/IIrjr1TcuDGqLXeHhbooAyJY1KdQMKnr4LZ22k31GBLdYKHmVjg"
           crossorigin="anonymous" defer></script>
+  <script src="/static/app.js" defer></script>
 </head>
 <body hx-headers='{"X-CSRF-Token": "{{ csrf_token }}"}'>
   <header class="container">
@@ -24,6 +25,7 @@
       <ul>
         {% if user %}
           <li><a href="/">{{ t("nav_applications") }}</a></li>
+          <li><a href="/friends">{{ t("nav_friends") }}</a></li>
           <li><a href="/stats">{{ t("nav_stats") }}</a></li>
           <li><a href="/settings">{{ t("nav_settings") }}</a></li>
           <li>
@@ -33,6 +35,15 @@
             </form>
           </li>
         {% endif %}
+        <li>
+          {% set other = "ru" if current_language() == "en" else "en" %}
+          <form method="post" action="/language" class="inline-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="lang" value="{{ other }}">
+            <input type="hidden" name="next" value="{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}">
+            <button type="submit" class="link-button lang-switch" title="{{ t('switch_language') }}: {{ LANGUAGE_NAMES[other] }}" lang="{{ other }}">{{ other|upper }}</button>
+          </form>
+        </li>
       </ul>
     </nav>
   </header>

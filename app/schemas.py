@@ -32,6 +32,7 @@ class ApplicationIn(BaseModel):
     company: str = Field(min_length=1, max_length=200)
     position: str = Field(min_length=1, max_length=200)
     url: str | None = Field(default=None, max_length=2000)
+    portal_url: str | None = Field(default=None, max_length=2000)
     source: str | None = Field(default=None, max_length=100)
     location: ShortText = None
     work_mode: WorkMode = WorkMode.UNKNOWN
@@ -62,7 +63,7 @@ class ApplicationIn(BaseModel):
             return re.sub(r"[\s  ]", "", value)
         return value
 
-    @field_validator("url")
+    @field_validator("url", "portal_url")
     @classmethod
     def check_url(cls, value: str | None) -> str | None:
         if value is not None and not re.match(r"^https?://[^\s/]+", value, re.IGNORECASE):
@@ -103,6 +104,7 @@ class ApplicationPatch(BaseModel):
     company: str | None = None
     position: str | None = None
     url: str | None = None
+    portal_url: str | None = None
     source: str | None = None
     location: str | None = None
     work_mode: WorkMode | None = None
@@ -126,6 +128,7 @@ class ApplicationOut(BaseModel):
     company: str
     position: str
     url: str | None
+    portal_url: str | None
     source: str | None
     location: str | None
     work_mode: WorkMode

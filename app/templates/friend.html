@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ t("friend_view_title", name=friend_name) }} — {{ t("app_name") }}{% endblock %}
+
+{% block content %}
+<p><a href="/friends">{{ t("back_to_friends") }}</a></p>
+<hgroup>
+  <h2>{{ t("friend_view_title", name=friend_name) }}</h2>
+  <p>{{ friend.email }} · {{ t("friend_readonly") }}</p>
+</hgroup>
+
+{% include "partials/filters.html" %}
+
+<div id="results">
+  {% include "partials/results.html" %}
+</div>
+{% endblock %}
