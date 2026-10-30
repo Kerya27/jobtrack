@@ -418,7 +418,7 @@ article > :last-child, .panel > :last-child { margin-bottom: 0; }
 .activity-streak-summary { min-width: 0; gap: 0.4rem; }
 .activity-streak-summary strong { font-size: 0.95rem; }
 .activity-fire { font-size: 1.15rem; }
-.activity-battle { min-width: 0; justify-content: center; gap: 0.6rem; }
+.activity-battle { min-width: 0; justify-content: flex-end; gap: 0.6rem; }
 .activity-player {
   gap: 0.4rem;
   padding: 0.3rem 0.65rem;
@@ -1218,7 +1218,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: brightness(0); }
 @media (max-width: 768px) {
   .activity-card { height: auto; min-height: 8.0625rem; }
   .activity-card-top { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; }
-  .activity-battle { justify-content: center; flex-wrap: nowrap; gap: 0.35rem; }
+  .activity-battle { justify-content: flex-end; flex-wrap: nowrap; gap: 0.35rem; }
   .activity-card-bottom { min-height: 5rem; }
   .card-layout { grid-template-columns: 1fr; }
   .app-row { flex-direction: column; align-items: stretch; }
