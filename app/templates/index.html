@@ -59,14 +59,15 @@
   <div class="activity-card-bottom">
     <div class="activity-calendar" aria-label="{{ t('activity_calendar') }}">
       {% for day in activity_calendar_days %}
-        <div class="activity-calendar-day{% if day == activity_today %} is-today{% endif %}"
-             aria-label="{{ day.isoformat() }}">
+        <a class="activity-calendar-day{% if day == activity_today %} is-today{% endif %}{% if day == activity_selected_date %} is-selected{% endif %}"
+           href="/?{{ activity_calendar_links[day] }}"
+           aria-label="{{ day.isoformat() }}"{% if day == activity_selected_date %} aria-current="date"{% endif %}>
           <span class="activity-calendar-number">{{ day.day }}</span>
           <span class="activity-calendar-divider" aria-hidden="true"></span>
           <span class="activity-calendar-count{% if user.daily_goal and activity_calendar_counts.get(day, 0) >= user.daily_goal %} is-goal-met{% else %} is-goal-unmet{% endif %}">
             {{ activity_calendar_counts.get(day, 0) }}{% if user.daily_goal %}/{{ user.daily_goal }}{% endif %}
           </span>
-        </div>
+        </a>
       {% endfor %}
     </div>
   </div>

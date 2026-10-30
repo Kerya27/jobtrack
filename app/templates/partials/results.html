@@ -1,9 +1,14 @@
 {% if bulk_message %}
   <p class="flash flash-{{ bulk_message.kind }}" role="status">{{ bulk_message.message }}</p>
 {% endif %}
+{% if filters.applied_on and filters.applied_on < activity_today %}
+  <p class="date-filter-reset">
+    <a href="{{ base_url }}?{{ today_filter_query }}">{{ t("activity_back_today") }}</a>
+  </p>
+{% endif %}
 {% include "partials/chips.html" %}
 
-{% if total == 0 and count_all == 0 and not filters.q and not filters.extra_count %}
+{% if total == 0 and count_all == 0 and not filters.q and not filters.extra_count and not filters.applied_on %}
   <p class="empty">{{ t("friend_empty") if readonly else t("empty_list") }}</p>
 {% elif view == "board" %}
   {% include "partials/board.html" %}

@@ -3,7 +3,7 @@
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import Annotated, Any
 from urllib.parse import urlencode
 
@@ -55,6 +55,11 @@ def parse_filters(params: Mapping[str, Any]) -> svc.ListFilters:
 
     sent = text("sent")
     sort = text("sort")
+    applied_on_value = text("applied_on")
+    try:
+        applied_on = date.fromisoformat(applied_on_value) if applied_on_value else None
+    except ValueError:
+        applied_on = None
     return svc.ListFilters(
         status=enum("status", ApplicationStatus),
         q=text("q"),
@@ -63,6 +68,7 @@ def parse_filters(params: Mapping[str, Any]) -> svc.ListFilters:
         source=text("source"),
         resume_version=text("resume"),
         sent=sent if sent in svc.SENT_PERIODS else None,  # type: ignore[arg-type]
+        applied_on=applied_on,
         sort=sort if sort in svc.SORT_ORDERS else "activity",  # type: ignore[arg-type]
     )
 
@@ -77,6 +83,7 @@ def filters_query(filters: svc.ListFilters, view: str = "list", **overrides: Any
         "source": filters.source,
         "resume": filters.resume_version,
         "sent": filters.sent,
+        "applied_on": filters.applied_on.isoformat() if filters.applied_on else None,
         "sort": None if filters.sort == "activity" else filters.sort,
         "view": None if view == "list" else view,
     }
@@ -125,6 +132,10 @@ def list_context(
         "view": view,
         "board_columns": columns,
         "today_count": svc.sent_today_count(db, owner.id, filters),
+        "activity_today": svc.today_local(),
+        "today_filter_query": filters_query(
+            filters, view, applied_on=svc.today_local().isoformat()
+        ),
         "daily_goal": owner.daily_goal,
         "today_toggle_query": filters_query(
             filters, view, sent=None if filters.sent == "today" else "today"
@@ -245,6 +256,11 @@ def index(
     context.update(
         activity_streak=svc.application_streak(db, user.id, user.daily_goal),
         activity_calendar_days=calendar_days,
+        activity_selected_date=filters.applied_on or today,
+        activity_calendar_links={
+            day: filters_query(filters, _view(params), applied_on=day.isoformat())
+            for day in calendar_days
+        },
         activity_calendar_counts=svc.sent_counts_by_day(
             db, user.id, calendar_days[0], today
         ),

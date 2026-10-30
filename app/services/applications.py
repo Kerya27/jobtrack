@@ -39,6 +39,7 @@ class ListFilters:
     source: str | None = None
     resume_version: str | None = None
     sent: SentPeriod | None = None
+    applied_on: date | None = None
     sort: SortOrder = "activity"
 
     @property
@@ -77,6 +78,11 @@ def _filtered(user_id: int, filters: ListFilters) -> Select[tuple[Application]]:
         stmt = stmt.where(
             Application.applied_at >= since,
             Application.applied_at <= today,
+            Application.status != ApplicationStatus.SAVED,
+        )
+    if filters.applied_on:
+        stmt = stmt.where(
+            Application.applied_at == filters.applied_on,
             Application.status != ApplicationStatus.SAVED,
         )
     return stmt

@@ -503,11 +503,20 @@ article > :last-child, .panel > :last-child { margin-bottom: 0; }
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
+.activity-calendar-day:hover { border-color: var(--primary); text-decoration: none; }
 .activity-calendar-day.is-today {
   border-color: var(--primary);
   background: var(--primary-soft);
 }
+.activity-calendar-day.is-selected {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+.date-filter-reset { margin: 0 0 0.55rem; text-align: right; font-size: 0.82rem; }
 .activity-calendar-number {
   font-size: 0.95rem;
   font-weight: 700;
