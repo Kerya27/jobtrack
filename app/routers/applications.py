@@ -3,6 +3,7 @@
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
+from datetime import date, timedelta
 from typing import Annotated, Any
 from urllib.parse import urlencode
 
@@ -13,9 +14,10 @@ from pydantic import ValidationError
 from app.config import get_settings
 from app.deps import CSRFProtected, CurrentUser, DbSession
 from app.i18n import t
-from app.models import Application, ApplicationStatus, EventType, User, WorkMode
+from app.models import Application, ApplicationStatus, DuoStatus, EventType, User, WorkMode
 from app.schemas import ApplicationIn, CaptureIn, EventIn, form_errors
 from app.services import applications as svc
+from app.services import duo as duo_svc
 from app.services import friends as friends_svc
 from app.services import job_parser, rate_limit
 from app.services.ssrf import FetchFailure
@@ -53,6 +55,11 @@ def parse_filters(params: Mapping[str, Any]) -> svc.ListFilters:
 
     sent = text("sent")
     sort = text("sort")
+    applied_on_value = text("applied_on")
+    try:
+        applied_on = date.fromisoformat(applied_on_value) if applied_on_value else None
+    except ValueError:
+        applied_on = None
     return svc.ListFilters(
         status=enum("status", ApplicationStatus),
         q=text("q"),
@@ -60,7 +67,8 @@ def parse_filters(params: Mapping[str, Any]) -> svc.ListFilters:
         work_mode=enum("work_mode", WorkMode),
         source=text("source"),
         resume_version=text("resume"),
-        sent=sent if sent in svc.SENT_PERIODS else None,  # type: ignore[arg-type]
+        sent=sent if sent in svc.SENT_PERIODS and not applied_on else None,  # type: ignore[arg-type]
+        applied_on=applied_on,
         sort=sort if sort in svc.SORT_ORDERS else "activity",  # type: ignore[arg-type]
     )
 
@@ -75,6 +83,7 @@ def filters_query(filters: svc.ListFilters, view: str = "list", **overrides: Any
         "source": filters.source,
         "resume": filters.resume_version,
         "sent": filters.sent,
+        "applied_on": filters.applied_on.isoformat() if filters.applied_on else None,
         "sort": None if filters.sort == "activity" else filters.sort,
         "view": None if view == "list" else view,
     }
@@ -109,6 +118,7 @@ def list_context(
     query_filters = replace(filters, status=None) if board else filters
     apps, total = svc.list_applications(db, owner.id, query_filters)
     counts = svc.status_counts(db, owner.id, filters)
+    all_counts = svc.status_counts(db, owner.id, replace(filters, applied_on=None, sent=None))
     columns: dict[ApplicationStatus, list[Application]] = {s: [] for s in BOARD_STATUSES}
     if board:
         for app in apps:
@@ -118,15 +128,26 @@ def list_context(
         "apps": apps,
         "total": total,
         "counts": counts,
-        "count_all": sum(counts.values()),
+        "count_all": sum(all_counts.values()),
         "filters": filters,
         "view": view,
         "board_columns": columns,
         "today_count": svc.sent_today_count(db, owner.id, filters),
+        "selected_day_count": svc.sent_on_count(
+            db, owner.id, filters, filters.applied_on or svc.today_local()
+        ),
+        "activity_today": svc.today_local(),
+        "today_filter_query": filters_query(
+            filters,
+            view,
+            applied_on=svc.today_local().isoformat(),
+            sent=None,
+        ),
         "daily_goal": owner.daily_goal,
         "today_toggle_query": filters_query(
             filters, view, sent=None if filters.sent == "today" else "today"
         ),
+        "date_toggle_query": filters_query(filters, view, applied_on=None, sent=None),
         "sources": svc.distinct_sources(db, owner.id),
         "resume_versions": svc.resume_versions(db, owner.id),
         "friend_companies": {} if readonly else friends_svc.friends_by_company(db, viewer.id),
@@ -237,6 +258,32 @@ def index(
     params = request.query_params
     filters = parse_filters(params)
     context = {"user": user, **list_context(db, user, filters, _view(params), viewer=user)}
+    battle = duo_svc.current_battle(db, user.id)
+    today = svc.today_local()
+    calendar_days = [today - timedelta(days=days_ago) for days_ago in range(13, -1, -1)]
+    context.update(
+        activity_streak=svc.application_streak(db, user.id, user.daily_goal),
+        activity_calendar_days=calendar_days,
+        activity_selected_date=filters.applied_on or today,
+        activity_calendar_links={
+            day: filters_query(filters, _view(params), applied_on=day.isoformat(), sent=None)
+            for day in calendar_days
+        },
+        activity_calendar_counts=svc.sent_counts_by_day(db, user.id, calendar_days[0], today),
+        activity_today=today,
+        activity_battle=battle,
+        activity_friends=friends_svc.friends(db, user.id),
+        activity_today_count=svc.sent_today_count(db, user.id, svc.ListFilters()),
+        activity_friend_today_count=(
+            svc.sent_today_count(
+                db,
+                battle.friend.id,
+                svc.ListFilters(),
+            )
+            if battle and battle.battle.status == DuoStatus.ACTIVE
+            else 0
+        ),
+    )
     if is_htmx(request) and request.headers.get("hx-target") == "results":
         return render_results(request, context)
     if clone is not None:

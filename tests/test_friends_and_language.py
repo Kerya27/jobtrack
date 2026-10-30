@@ -135,6 +135,69 @@ def test_friend_applied_badge(alice: Client, bob: Client) -> None:
     assert page.count("Also applied") == 1  # Bob only saved the second one, didn't apply
 
 
+def test_duo_invitation_acceptance_and_leave(alice: Client, bob: Client) -> None:
+    befriend(alice, bob, "bob@example.com")
+    alice.create_app(company="Alice job")
+    bob.create_app(company="Bob job")
+
+    sent = alice.form("/duo/invite", {"friend_id": user_id(bob)}, follow_redirects=False)
+    assert sent.status_code == 303
+    alice_home = alice.get("/").text
+    assert "Waiting for bob to accept" in alice_home
+    assert "Alice job" in alice_home
+
+    bob_home = bob.get("/").text
+    assert "alice challenges you" in bob_home
+    assert "Accept" in bob_home and "Decline" in bob_home
+    battle_id = int(re.findall(r"/duo/(\d+)/accept", bob_home)[0])
+    assert 'class="nav-count">1</span>' in bob_home
+    activity_card = re.search(
+        r'<section class="panel activity-card".*?</section>', bob_home, re.DOTALL
+    )
+    assert activity_card
+    assert "<strong>alice</strong>" in activity_card.group(0)
+    assert f'action="/duo/{battle_id}/accept"' in activity_card.group(0)
+    assert 'class="activity-accept"' in activity_card.group(0)
+
+    bob.form(f"/duo/{battle_id}/accept")
+    alice_home = alice.get("/").text
+    bob_home = bob.get("/").text
+    assert "Leave battle" in alice_home and "⚡" in alice_home
+    assert "Leave battle" in bob_home and "⚡" in bob_home
+    for page in (alice_home, bob_home):
+        activity_card = re.search(
+            r'<section class="panel activity-card".*?</section>', page, re.DOTALL
+        )
+        assert activity_card
+        player_blocks = re.findall(
+            r'<div class="(activity-player.*?)</div>', activity_card.group(0), re.DOTALL
+        )
+        assert len(player_blocks) == 2
+        assert all("is-leading" not in block for block in player_blocks)
+        assert all(re.search(r"<strong>1</strong>", block) for block in player_blocks)
+        assert all(not re.search(r"<strong>\d+/\d+</strong>", block) for block in player_blocks)
+
+    alice.create_app(company="Alice second job")
+    alice_home = alice.get("/").text
+    activity_card = re.search(
+        r'<section class="panel activity-card".*?</section>', alice_home, re.DOTALL
+    )
+    assert activity_card
+    player_blocks = re.findall(
+        r'<div class="(activity-player.*?)</div>', activity_card.group(0), re.DOTALL
+    )
+    assert len(player_blocks) == 2
+    assert player_blocks[0].startswith("activity-player is-leading")
+    assert "<strong>2</strong>" in player_blocks[0]
+    assert player_blocks[1].startswith("activity-player")
+    assert "is-leading" not in player_blocks[1]
+    assert "<strong>1</strong>" in player_blocks[1]
+
+    alice.form(f"/duo/{battle_id}/leave")
+    assert "Challenge" in alice.get("/").text
+    assert "Challenge" in bob.get("/").text
+
+
 def test_deleting_an_account_removes_friendships(alice: Client, bob: Client, db: Session) -> None:
     befriend(alice, bob, "bob@example.com")
     bob.form("/settings/delete", {"password": "correct-horse-42"})

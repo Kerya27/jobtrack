@@ -7,7 +7,7 @@ so data isolation is enforced in one place.
 import re
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, replace
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import Literal
 
 from sqlalchemy import Select, delete, func, or_, select
@@ -39,6 +39,7 @@ class ListFilters:
     source: str | None = None
     resume_version: str | None = None
     sent: SentPeriod | None = None
+    applied_on: date | None = None
     sort: SortOrder = "activity"
 
     @property
@@ -79,6 +80,11 @@ def _filtered(user_id: int, filters: ListFilters) -> Select[tuple[Application]]:
             Application.applied_at <= today,
             Application.status != ApplicationStatus.SAVED,
         )
+    if filters.applied_on:
+        stmt = stmt.where(
+            Application.applied_at == filters.applied_on,
+            Application.status != ApplicationStatus.SAVED,
+        )
     return stmt
 
 
@@ -113,8 +119,54 @@ def status_counts(db: Session, user_id: int, filters: ListFilters) -> dict[Appli
 
 def sent_today_count(db: Session, user_id: int, filters: ListFilters) -> int:
     """For the "Today 3/5" chip: exactly the rows you'd see after clicking it."""
-    stmt = _filtered(user_id, replace(filters, sent="today"))
+    return sent_on_count(db, user_id, filters, today_local())
+
+
+def sent_on_count(db: Session, user_id: int, filters: ListFilters, day: date) -> int:
+    """Count sent applications for one day while preserving the other list filters."""
+    stmt = _filtered(user_id, replace(filters, sent=None, applied_on=day))
     return db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
+
+
+def sent_counts_by_day(db: Session, user_id: int, start: date, end: date) -> dict[date, int]:
+    """Count sent applications by applied date in the inclusive date range."""
+    rows = db.execute(
+        select(Application.applied_at, func.count())
+        .where(
+            Application.user_id == user_id,
+            Application.applied_at >= start,
+            Application.applied_at <= end,
+            Application.status != ApplicationStatus.SAVED,
+        )
+        .group_by(Application.applied_at)
+    ).all()
+    return {applied_on: count for applied_on, count in rows if applied_on}
+
+
+def application_streak(db: Session, user_id: int, goal: int) -> int:
+    """Consecutive days meeting the daily goal; an incomplete today preserves yesterday's streak."""
+    today = today_local()
+    rows = db.execute(
+        select(Application.applied_at, func.count())
+        .where(
+            Application.user_id == user_id,
+            Application.applied_at <= today,
+            Application.status != ApplicationStatus.SAVED,
+        )
+        .group_by(Application.applied_at)
+    ).all()
+    counts: dict[date, int] = {applied_on: count for applied_on, count in rows if applied_on}
+
+    def completed(day: date) -> bool:
+        count = counts.get(day, 0)
+        return count >= goal if goal else count > 0
+
+    day = today if completed(today) else today - timedelta(days=1)
+    streak = 0
+    while completed(day):
+        streak += 1
+        day -= timedelta(days=1)
+    return streak
 
 
 def distinct_sources(db: Session, user_id: int) -> list[str]:

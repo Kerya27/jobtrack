@@ -1,3 +1,4 @@
+import re
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select, update
@@ -164,6 +165,75 @@ def test_archive_hides_from_default_list(alice: Client) -> None:
     assert "Archived Inc" in alice.get("/?archived=1").text
     alice.form(f"/applications/{app['id']}/archive")  # toggles back
     assert "Archived Inc" in alice.get("/").text
+
+
+def test_activity_calendar_shows_last_14_days_ending_today(alice: Client) -> None:
+    page = alice.get("/").text
+
+    calendar = re.search(
+        r'<div class="activity-calendar"[^>]*>(.*?)</div>\s*</div>\s*</section>',
+        page,
+        re.DOTALL,
+    )
+
+    assert calendar
+    content = calendar.group(1)
+    day_cards = re.findall(r'class="activity-calendar-day[^"]*"', content)
+    dates = re.findall(r'aria-label="(\d{4}-\d{2}-\d{2})"', content)
+    assert len(day_cards) == 14
+    assert dates[-1] == today_local().isoformat()
+    assert 'class="activity-calendar-day is-today is-selected"' in content
+
+
+def test_activity_calendar_shows_sent_count_and_daily_goal(alice: Client) -> None:
+    today = today_local()
+    yesterday = today - timedelta(days=1)
+    for index in range(5):
+        alice.create_app(company=f"Today {index}", applied_at=today.isoformat())
+    alice.create_app(company="Yesterday", applied_at=yesterday.isoformat())
+    alice.create_app(company="Saved today", status="saved", applied_at=today.isoformat())
+
+    page = alice.get("/").text
+
+    assert f'<span class="activity-calendar-number">{today.day}</span>' in page
+    assert 'class="activity-calendar-count is-goal-met">\n            5/5' in page
+    assert 'class="activity-calendar-count is-goal-unmet">\n            1/5' in page
+
+
+def test_activity_calendar_filters_sent_applications_by_selected_day(alice: Client) -> None:
+    today = today_local()
+    yesterday = today - timedelta(days=1)
+    alice.create_app(company="Yesterday application", applied_at=yesterday.isoformat())
+    alice.create_app(company="Today application", applied_at=today.isoformat())
+    alice.create_app(
+        company="Saved yesterday",
+        status="saved",
+        applied_at=yesterday.isoformat(),
+    )
+
+    page = alice.get(f"/?applied_on={yesterday.isoformat()}").text
+
+    assert "Yesterday application" in page
+    assert "Today application" not in page
+    assert "Saved yesterday" not in page
+    assert f'href="/?applied_on={yesterday.isoformat()}"' in page
+    assert 'class="activity-calendar-day is-selected"' in page
+    assert f'href="/?applied_on={today.isoformat()}"' in page
+    assert "Back to Today" in page
+    assert f'name="applied_on" value="{yesterday.isoformat()}"' in page
+
+    today_page = alice.get(f"/?applied_on={today.isoformat()}").text
+    assert "Today application" in today_page
+    assert "Yesterday application" not in today_page
+    assert "Back to Today" not in today_page
+
+
+def test_invalid_activity_date_does_not_break_application_list(alice: Client) -> None:
+    alice.create_app(company="Application")
+
+    page = alice.get("/?applied_on=not-a-date").text
+
+    assert "Application" in page
 
 
 def test_delete_removes_application_and_events(alice: Client, db: Session) -> None:

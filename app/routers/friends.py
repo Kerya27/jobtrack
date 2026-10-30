@@ -11,6 +11,7 @@ from app.i18n import t
 from app.models import Application
 from app.routers.applications import list_context, parse_filters, render_results
 from app.services import applications as svc
+from app.services import duo as duo_svc
 from app.services import friends as friends_svc
 from app.services.applications import NotFoundError
 from app.web import flash, is_htmx, redirect, render
@@ -63,6 +64,39 @@ def remove(request: Request, friendship_id: int, user: CurrentUser, db: DbSessio
     friends_svc.remove(db, user.id, friendship_id)
     flash(request, t("friends_removed"), "success")
     return redirect(request, "/friends")
+
+
+@router.post("/duo/invite", dependencies=[CSRFProtected])
+def invite_to_duo(
+    request: Request,
+    user: CurrentUser,
+    db: DbSession,
+    friend_id: Annotated[int, Form()],
+) -> Response:
+    outcome = duo_svc.send_invite(db, user.id, friend_id)
+    messages = {
+        duo_svc.InviteOutcome.SENT: ("duo_invite_sent", "success"),
+        duo_svc.InviteOutcome.ALREADY_EXISTS: ("duo_invite_exists", "info"),
+        duo_svc.InviteOutcome.SENDER_BUSY: ("duo_already_in_battle", "warning"),
+        duo_svc.InviteOutcome.FRIEND_BUSY: ("duo_friend_busy", "warning"),
+    }
+    key, kind = messages[outcome]
+    flash(request, t(key), kind)
+    return redirect(request, "/")
+
+
+@router.post("/duo/{battle_id:int}/accept", dependencies=[CSRFProtected])
+def accept_duo(request: Request, battle_id: int, user: CurrentUser, db: DbSession) -> Response:
+    duo_svc.accept_invite(db, user.id, battle_id)
+    flash(request, t("duo_accepted"), "success")
+    return redirect(request, "/")
+
+
+@router.post("/duo/{battle_id:int}/leave", dependencies=[CSRFProtected])
+def leave_duo(request: Request, battle_id: int, user: CurrentUser, db: DbSession) -> Response:
+    duo_svc.leave_battle(db, user.id, battle_id)
+    flash(request, t("duo_left"), "info")
+    return redirect(request, "/")
 
 
 @router.get("/friends/{friend_id:int}")

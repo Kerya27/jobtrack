@@ -4,6 +4,7 @@
       hx-get="{{ base_url }}" hx-target="#results"
       hx-trigger="submit, input changed delay:300ms from:#q, change[target.id != 'q']"
       hx-include="#status-chips input:checked">
+  {% if filters.applied_on %}<input type="hidden" name="applied_on" value="{{ filters.applied_on.isoformat() }}">{% endif %}
   <div class="filters-top">
     <div class="search-wrap">
       {{ icon("search") }}

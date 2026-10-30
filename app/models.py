@@ -157,6 +157,28 @@ class FriendshipStatus(StrEnum):
     ACCEPTED = "accepted"
 
 
+class DuoStatus(StrEnum):
+    PENDING = "pending"
+    ACTIVE = "active"
+
+
+class DuoBattle(Base):
+    __tablename__ = "duo_battles"
+    __table_args__ = (
+        CheckConstraint("challenger_id <> opponent_id", name="not_self"),
+        Index("ix_duo_battles_challenger_status", "challenger_id", "status"),
+        Index("ix_duo_battles_opponent_status", "opponent_id", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    challenger_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    opponent_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    status: Mapped[DuoStatus] = mapped_column(
+        _str_enum(DuoStatus, "duo_status"), default=DuoStatus.PENDING
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class Friendship(Base):
     """A friend request; once accepted, both users can see each other's applications."""
 
