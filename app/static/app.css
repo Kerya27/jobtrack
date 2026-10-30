@@ -460,7 +460,43 @@ article > :last-child, .panel > :last-child { margin-bottom: 0; }
 }
 .activity-pending { color: var(--muted); font-size: 0.82rem; }
 .activity-add-friend { font-size: 0.85rem; }
-.activity-card-bottom { min-height: 0; }
+.activity-card-bottom { min-width: 0; min-height: 0; overflow: hidden; }
+.activity-calendar {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.35rem 1rem;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.activity-calendar::-webkit-scrollbar { display: none; }
+.activity-calendar-day {
+  display: flex;
+  flex: 0 0 3.15rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  height: 3.55rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.activity-calendar-day.is-today {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+.activity-calendar-number {
+  font-size: 0.8rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.activity-calendar-divider { width: 65%; height: 1px; background: var(--line); }
+.activity-calendar-placeholder { height: 0.55rem; }
 .duo-notification { padding-top: 0.65rem; border-top: 1px solid var(--line); }
 .duo-notification p { margin-bottom: 0.45rem; }
 .duo-notification-actions { display: flex; gap: 0.4rem; }
@@ -1183,7 +1219,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: brightness(0); }
   .activity-card { height: auto; min-height: 8.0625rem; }
   .activity-card-top { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; }
   .activity-battle { justify-content: center; flex-wrap: nowrap; gap: 0.35rem; }
-  .activity-card-bottom { min-height: 3rem; }
+  .activity-card-bottom { min-height: 4.5rem; }
   .card-layout { grid-template-columns: 1fr; }
   .app-row { flex-direction: column; align-items: stretch; }
   .app-side select { width: 100%; }

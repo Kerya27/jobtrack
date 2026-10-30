@@ -50,7 +50,18 @@
       {% endif %}
     </div>
   </div>
-  <div class="activity-card-bottom" aria-hidden="true"></div>
+  <div class="activity-card-bottom">
+    <div class="activity-calendar" aria-label="{{ t('activity_calendar') }}">
+      {% for day in activity_calendar_days %}
+        <div class="activity-calendar-day{% if day == activity_today %} is-today{% endif %}"
+             aria-label="{{ day.isoformat() }}">
+          <span class="activity-calendar-number">{{ day.day }}</span>
+          <span class="activity-calendar-divider" aria-hidden="true"></span>
+          <span class="activity-calendar-placeholder" aria-hidden="true"></span>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
 </section>
 
 <article class="quick-add">

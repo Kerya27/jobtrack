@@ -3,6 +3,7 @@
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
+from datetime import timedelta
 from typing import Annotated, Any
 from urllib.parse import urlencode
 
@@ -239,8 +240,13 @@ def index(
     filters = parse_filters(params)
     context = {"user": user, **list_context(db, user, filters, _view(params), viewer=user)}
     battle = duo_svc.current_battle(db, user.id)
+    today = svc.today_local()
     context.update(
         activity_streak=svc.application_streak(db, user.id, user.daily_goal),
+        activity_calendar_days=[
+            today - timedelta(days=days_ago) for days_ago in range(13, -1, -1)
+        ],
+        activity_today=today,
         activity_battle=battle,
         activity_friends=friends_svc.friends(db, user.id),
         activity_today_count=svc.sent_today_count(db, user.id, svc.ListFilters()),

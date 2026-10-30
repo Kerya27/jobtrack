@@ -1,3 +1,4 @@
+import re
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select, update
@@ -164,6 +165,24 @@ def test_archive_hides_from_default_list(alice: Client) -> None:
     assert "Archived Inc" in alice.get("/?archived=1").text
     alice.form(f"/applications/{app['id']}/archive")  # toggles back
     assert "Archived Inc" in alice.get("/").text
+
+
+def test_activity_calendar_shows_last_14_days_ending_today(alice: Client) -> None:
+    page = alice.get("/").text
+
+    calendar = re.search(
+        r'<div class="activity-calendar"[^>]*>(.*?)</div>\s*</div>\s*</section>',
+        page,
+        re.DOTALL,
+    )
+
+    assert calendar
+    content = calendar.group(1)
+    day_cards = re.findall(r'class="activity-calendar-day(?: is-today)?"', content)
+    dates = re.findall(r'aria-label="(\d{4}-\d{2}-\d{2})"', content)
+    assert len(day_cards) == 14
+    assert dates[-1] == today_local().isoformat()
+    assert 'class="activity-calendar-day is-today"' in content
 
 
 def test_delete_removes_application_and_events(alice: Client, db: Session) -> None:

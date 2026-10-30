@@ -58,6 +58,7 @@ STRINGS: Final[dict[str, dict[str, str]]] = {
         # quick add
         "quick_add_title": "New application",
         "activity_title": "Daily activity and duo battle",
+        "activity_calendar": "Recent days",
         "activity_streak": "{count} Day Streak!",
         "activity_you": "You",
         "activity_versus": "versus",
@@ -345,6 +346,7 @@ STRINGS: Final[dict[str, dict[str, str]]] = {
         # quick add
         "quick_add_title": "Новый отклик",
         "activity_title": "Активность и дуэль",
+        "activity_calendar": "Последние дни",
         "activity_streak": "Стрик: {count} дн.!",
         "activity_you": "Ты",
         "activity_versus": "против",
