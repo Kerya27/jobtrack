@@ -128,9 +128,7 @@ def sent_on_count(db: Session, user_id: int, filters: ListFilters, day: date) ->
     return db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
 
 
-def sent_counts_by_day(
-    db: Session, user_id: int, start: date, end: date
-) -> dict[date, int]:
+def sent_counts_by_day(db: Session, user_id: int, start: date, end: date) -> dict[date, int]:
     """Count sent applications by applied date in the inclusive date range."""
     rows = db.execute(
         select(Application.applied_at, func.count())

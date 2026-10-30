@@ -212,7 +212,7 @@ def test_all_chip_resets_the_date_and_other_filters(alice: Client) -> None:
         today,
     )
     assert all_chip
-    assert "All <span class=\"count\">2</span>" in all_chip.group(0)
+    assert 'All <span class="count">2</span>' in all_chip.group(0)
     assert set(titles(alice.get("/", headers=HTMX_RESULTS).text)) == {"Today", "Old"}
 
 
@@ -229,7 +229,7 @@ def test_all_counter_stays_global_when_a_calendar_date_is_selected(alice: Client
 
     assert "Today one" not in page
     assert "Yesterday one" in page and "Yesterday two" in page
-    assert "All <span class=\"count\">5</span>" in page
+    assert 'All <span class="count">5</span>' in page
     assert f"{yesterday:%d.%m} - 2/5" in page
     assert f'href="/?applied_on={today.isoformat()}"' in page
 

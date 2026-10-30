@@ -118,9 +118,7 @@ def list_context(
     query_filters = replace(filters, status=None) if board else filters
     apps, total = svc.list_applications(db, owner.id, query_filters)
     counts = svc.status_counts(db, owner.id, filters)
-    all_counts = svc.status_counts(
-        db, owner.id, replace(filters, applied_on=None, sent=None)
-    )
+    all_counts = svc.status_counts(db, owner.id, replace(filters, applied_on=None, sent=None))
     columns: dict[ApplicationStatus, list[Application]] = {s: [] for s in BOARD_STATUSES}
     if board:
         for app in apps:
@@ -149,9 +147,7 @@ def list_context(
         "today_toggle_query": filters_query(
             filters, view, sent=None if filters.sent == "today" else "today"
         ),
-        "date_toggle_query": filters_query(
-            filters, view, applied_on=None, sent=None
-        ),
+        "date_toggle_query": filters_query(filters, view, applied_on=None, sent=None),
         "sources": svc.distinct_sources(db, owner.id),
         "resume_versions": svc.resume_versions(db, owner.id),
         "friend_companies": {} if readonly else friends_svc.friends_by_company(db, viewer.id),
@@ -270,14 +266,10 @@ def index(
         activity_calendar_days=calendar_days,
         activity_selected_date=filters.applied_on or today,
         activity_calendar_links={
-            day: filters_query(
-                filters, _view(params), applied_on=day.isoformat(), sent=None
-            )
+            day: filters_query(filters, _view(params), applied_on=day.isoformat(), sent=None)
             for day in calendar_days
         },
-        activity_calendar_counts=svc.sent_counts_by_day(
-            db, user.id, calendar_days[0], today
-        ),
+        activity_calendar_counts=svc.sent_counts_by_day(db, user.id, calendar_days[0], today),
         activity_today=today,
         activity_battle=battle,
         activity_friends=friends_svc.friends(db, user.id),

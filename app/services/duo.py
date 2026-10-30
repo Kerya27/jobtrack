@@ -54,9 +54,7 @@ def current_battle(db: Session, user_id: int) -> DuoView | None:
     if not battles:
         return None
     battle = battles[0]
-    friend_id = (
-        battle.opponent_id if battle.challenger_id == user_id else battle.challenger_id
-    )
+    friend_id = battle.opponent_id if battle.challenger_id == user_id else battle.challenger_id
     friend = db.get(User, friend_id)
     return DuoView(battle, friend) if friend else None
 
@@ -98,9 +96,8 @@ def accept_invite(db: Session, user_id: int, battle_id: int) -> None:
     )
     if battle is None:
         raise NotFoundError
-    if (
-        any(item.id != battle.id for item in _battles_for(db, user_id))
-        or any(item.id != battle.id for item in _battles_for(db, battle.challenger_id))
+    if any(item.id != battle.id for item in _battles_for(db, user_id)) or any(
+        item.id != battle.id for item in _battles_for(db, battle.challenger_id)
     ):
         raise NotFoundError
     friendship = db.scalar(

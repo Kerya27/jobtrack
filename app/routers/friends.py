@@ -86,18 +86,14 @@ def invite_to_duo(
 
 
 @router.post("/duo/{battle_id:int}/accept", dependencies=[CSRFProtected])
-def accept_duo(
-    request: Request, battle_id: int, user: CurrentUser, db: DbSession
-) -> Response:
+def accept_duo(request: Request, battle_id: int, user: CurrentUser, db: DbSession) -> Response:
     duo_svc.accept_invite(db, user.id, battle_id)
     flash(request, t("duo_accepted"), "success")
     return redirect(request, "/")
 
 
 @router.post("/duo/{battle_id:int}/leave", dependencies=[CSRFProtected])
-def leave_duo(
-    request: Request, battle_id: int, user: CurrentUser, db: DbSession
-) -> Response:
+def leave_duo(request: Request, battle_id: int, user: CurrentUser, db: DbSession) -> Response:
     duo_svc.leave_battle(db, user.id, battle_id)
     flash(request, t("duo_left"), "info")
     return redirect(request, "/")
