@@ -119,7 +119,12 @@ def status_counts(db: Session, user_id: int, filters: ListFilters) -> dict[Appli
 
 def sent_today_count(db: Session, user_id: int, filters: ListFilters) -> int:
     """For the "Today 3/5" chip: exactly the rows you'd see after clicking it."""
-    stmt = _filtered(user_id, replace(filters, sent="today"))
+    return sent_on_count(db, user_id, filters, today_local())
+
+
+def sent_on_count(db: Session, user_id: int, filters: ListFilters, day: date) -> int:
+    """Count sent applications for one day while preserving the other list filters."""
+    stmt = _filtered(user_id, replace(filters, sent=None, applied_on=day))
     return db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
 
 

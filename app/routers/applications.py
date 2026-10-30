@@ -67,7 +67,7 @@ def parse_filters(params: Mapping[str, Any]) -> svc.ListFilters:
         work_mode=enum("work_mode", WorkMode),
         source=text("source"),
         resume_version=text("resume"),
-        sent=sent if sent in svc.SENT_PERIODS else None,  # type: ignore[arg-type]
+        sent=sent if sent in svc.SENT_PERIODS and not applied_on else None,  # type: ignore[arg-type]
         applied_on=applied_on,
         sort=sort if sort in svc.SORT_ORDERS else "activity",  # type: ignore[arg-type]
     )
@@ -118,6 +118,9 @@ def list_context(
     query_filters = replace(filters, status=None) if board else filters
     apps, total = svc.list_applications(db, owner.id, query_filters)
     counts = svc.status_counts(db, owner.id, filters)
+    all_counts = svc.status_counts(
+        db, owner.id, replace(filters, applied_on=None, sent=None)
+    )
     columns: dict[ApplicationStatus, list[Application]] = {s: [] for s in BOARD_STATUSES}
     if board:
         for app in apps:
@@ -127,18 +130,27 @@ def list_context(
         "apps": apps,
         "total": total,
         "counts": counts,
-        "count_all": sum(counts.values()),
+        "count_all": sum(all_counts.values()),
         "filters": filters,
         "view": view,
         "board_columns": columns,
         "today_count": svc.sent_today_count(db, owner.id, filters),
+        "selected_day_count": svc.sent_on_count(
+            db, owner.id, filters, filters.applied_on or svc.today_local()
+        ),
         "activity_today": svc.today_local(),
         "today_filter_query": filters_query(
-            filters, view, applied_on=svc.today_local().isoformat()
+            filters,
+            view,
+            applied_on=svc.today_local().isoformat(),
+            sent=None,
         ),
         "daily_goal": owner.daily_goal,
         "today_toggle_query": filters_query(
             filters, view, sent=None if filters.sent == "today" else "today"
+        ),
+        "date_toggle_query": filters_query(
+            filters, view, applied_on=None, sent=None
         ),
         "sources": svc.distinct_sources(db, owner.id),
         "resume_versions": svc.resume_versions(db, owner.id),
@@ -258,7 +270,9 @@ def index(
         activity_calendar_days=calendar_days,
         activity_selected_date=filters.applied_on or today,
         activity_calendar_links={
-            day: filters_query(filters, _view(params), applied_on=day.isoformat())
+            day: filters_query(
+                filters, _view(params), applied_on=day.isoformat(), sent=None
+            )
             for day in calendar_days
         },
         activity_calendar_counts=svc.sent_counts_by_day(

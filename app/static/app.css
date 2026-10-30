@@ -780,16 +780,23 @@ small { color: var(--muted); }
 }
 .chip:hover { transform: translateY(-1px); border-color: var(--primary); }
 .chip input { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; }
-.chip:has(input:checked) { background: var(--ink); color: var(--bg); border-color: transparent; }
+.chip:has(input:checked),
+.chip.is-active,
+.chip-today.active { background: var(--primary); color: var(--primary-ink); border-color: transparent; }
 .chip:has(input:focus-visible) { outline: 2px solid var(--primary); }
 .chip .count { opacity: 0.75; font-variant-numeric: tabular-nums; font-size: 0.78rem; }
-.chip-applied:has(input:checked) { background: var(--jt-applied); }
-.chip-replied:has(input:checked) { background: var(--jt-replied); }
-.chip-interview:has(input:checked) { background: var(--jt-interview); }
-.chip-test_task:has(input:checked) { background: var(--jt-test_task); }
-.chip-offer:has(input:checked) { background: var(--jt-offer); }
-.chip-rejected:has(input:checked) { background: var(--jt-rejected); }
-.chip-saved:has(input:checked) { background: var(--jt-saved); }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .chip:not(:has(input:checked)):not(.is-active):not(.active) {
+    background: transparent;
+  }
+}
+:root[data-theme="light"] .chip:not(:has(input:checked)):not(.is-active):not(.active) {
+  background: var(--surface);
+}
+:root[data-theme="dark"] .chip:not(:has(input:checked)):not(.is-active):not(.active) {
+  background: transparent;
+}
 
 .filters-top { display: flex; gap: var(--jt-gap); align-items: center; flex-wrap: wrap; }
 .filters-top input[type="search"] { flex: 1 1 16rem; margin-bottom: 0; padding-left: 2.4rem; background-image: none; }
@@ -826,8 +833,8 @@ small { color: var(--muted); }
 
 .chips-status { display: contents; }
 .chip-today { text-decoration: none; font-weight: 650; border-style: dashed; color: var(--ink); }
-.chip-today.active { background: var(--primary); color: var(--primary-ink); border: 1px solid transparent; }
-.chip-today.done:not(.active) { border-color: var(--jt-offer); color: var(--jt-offer); border-style: solid; background: color-mix(in srgb, var(--jt-offer) 10%, var(--surface)); }
+.chip-today.active { border: 1px solid transparent; }
+.chip-today.done:not(.active) { border-color: var(--line); color: var(--muted); border-style: solid; }
 
 /* ---------- list ---------- */
 .app-list { display: flex; flex-direction: column; gap: 0.65rem; }

@@ -203,15 +203,44 @@ def test_clone_prefills_form_without_link_and_date(alice: Client, bob: Client) -
     assert bob.get(f"/?clone={source['id']}").status_code == 404
 
 
-def test_all_chip_leaves_the_today_view(alice: Client) -> None:
-    """Bug: with "Today" on, "All" stayed selected, so clicking it did nothing."""
+def test_all_chip_resets_the_date_and_other_filters(alice: Client) -> None:
     alice.create_app(position="Today")
     alice.create_app(position="Old", applied_at=(today_local() - timedelta(days=3)).isoformat())
-    today = alice.get("/?sent=today", headers=HTMX_RESULTS).text
-    all_chip = today.split("data-all-chip")[1].split(">")[0]
-    assert "checked" not in all_chip
-    assert """hx-vals='{"sent": ""}'""" in all_chip
-    # what the chip sends: the filters form still says sent=today, hx-vals overrides it
-    assert set(titles(alice.get("/?sent=", headers=HTMX_RESULTS).text)) == {"Today", "Old"}
-    normal = alice.get("/", headers=HTMX_RESULTS).text.split("data-all-chip")[1].split(">")[0]
-    assert "checked" in normal and "hx-vals" not in normal
+    today = alice.get("/?sent=today").text
+    all_chip = re.search(
+        r'<a\b[^>]*href="/"[^>]*>\s*All <span class="count">2</span>',
+        today,
+    )
+    assert all_chip
+    assert "All <span class=\"count\">2</span>" in all_chip.group(0)
+    assert set(titles(alice.get("/", headers=HTMX_RESULTS).text)) == {"Today", "Old"}
+
+
+def test_all_counter_stays_global_when_a_calendar_date_is_selected(alice: Client) -> None:
+    today = today_local()
+    yesterday = today - timedelta(days=1)
+    alice.create_app(position="Today one", applied_at=today.isoformat())
+    alice.create_app(position="Today two", applied_at=today.isoformat())
+    alice.create_app(position="Today three", applied_at=today.isoformat())
+    alice.create_app(position="Yesterday one", applied_at=yesterday.isoformat())
+    alice.create_app(position="Yesterday two", applied_at=yesterday.isoformat())
+
+    page = alice.get(f"/?applied_on={yesterday.isoformat()}&sent=today").text
+
+    assert "Today one" not in page
+    assert "Yesterday one" in page and "Yesterday two" in page
+    assert "All <span class=\"count\">5</span>" in page
+    assert f"{yesterday:%d.%m} - 2/5" in page
+    assert f'href="/?applied_on={today.isoformat()}"' in page
+
+
+def test_all_from_date_view_returns_to_clean_root(alice: Client) -> None:
+    yesterday = today_local() - timedelta(days=1)
+    alice.create_app(position="Yesterday", applied_at=yesterday.isoformat())
+    response = alice.get("/")
+
+    assert response.url.path == "/"
+    assert not response.url.query
+    page = alice.get(f"/?applied_on={yesterday.isoformat()}").text
+    all_chip = re.search(r'<a\b[^>]*href="/"[^>]*>\s*All <span class="count">1</span>', page)
+    assert all_chip

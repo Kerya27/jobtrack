@@ -1,16 +1,12 @@
-{# Status chips with counters and the "Today 3/5" chip. `oob` = true for an out-of-band update. #}
+{# Status chips with counts and a date-aware daily-activity chip. `oob` = true for an out-of-band update. #}
 {% from "macros.html" import icon with context %}
 <div id="status-chips" class="chips" {% if oob %}hx-swap-oob="true"{% endif %}>
   {% if view != "board" %}
-    <div class="chips-status" role="radiogroup">
-      <label class="chip">
-        {# "All" means everything: it also drops the "Today" filter, and isn't lit while Today is on. #}
-        <input type="radio" name="status" value="" data-all-chip
-               {% if not filters.status and filters.sent != "today" %}checked{% endif %}
-               {% if filters.sent == "today" %}hx-vals='{"sent": ""}'{% endif %}
-               hx-get="{{ base_url }}" hx-target="#results" hx-include="#filters" hx-trigger="change">
+    <div class="chips-status">
+      <a class="chip{% if not filters.status and filters.sent != 'today' %} is-active{% endif %}"
+         href="{{ base_url }}"{% if not filters.status and filters.sent != 'today' %} aria-current="true"{% endif %}>
         {{ t("all") }} <span class="count">{{ count_all }}</span>
-      </label>
+      </a>
       {% for s in STATUSES %}
         {% if counts.get(s) or filters.status == s %}
           <label class="chip chip-{{ s.value }}">
@@ -22,10 +18,23 @@
       {% endfor %}
     </div>
   {% endif %}
-  <a href="{{ base_url }}?{{ today_toggle_query }}" data-sent-toggle
-     class="chip chip-today{% if filters.sent == 'today' %} active{% endif %}{% if daily_goal and today_count >= daily_goal %} done{% endif %}"
-     title="{{ t('today_chip_title') }}" {% if filters.sent == 'today' %}aria-current="true"{% endif %}>
-    {{ icon("target") }}
-    {% if daily_goal %}{{ t("today_chip", count=today_count, goal=daily_goal) }}{% else %}{{ t("today_chip_no_goal", count=today_count) }}{% endif %}
-  </a>
+  {% if filters.applied_on %}
+    <a href="{{ base_url }}{% if date_toggle_query %}?{{ date_toggle_query }}{% endif %}"
+       class="chip chip-today active"
+       title="{{ t('date_chip_title', date=filters.applied_on.strftime('%d.%m')) }}" aria-current="true">
+      {{ icon("target") }}
+      {% if daily_goal %}
+        {{ t("date_chip", date=filters.applied_on.strftime("%d.%m"), count=selected_day_count, goal=daily_goal) }}
+      {% else %}
+        {{ t("date_chip_no_goal", date=filters.applied_on.strftime("%d.%m"), count=selected_day_count) }}
+      {% endif %}
+    </a>
+  {% else %}
+    <a href="{{ base_url }}{% if today_toggle_query %}?{{ today_toggle_query }}{% endif %}" data-sent-toggle
+       class="chip chip-today{% if filters.sent == 'today' %} active{% endif %}{% if daily_goal and today_count >= daily_goal %} done{% endif %}"
+       title="{{ t('today_chip_title') }}" {% if filters.sent == 'today' %}aria-current="true"{% endif %}>
+      {{ icon("target") }}
+      {% if daily_goal %}{{ t("today_chip", count=today_count, goal=daily_goal) }}{% else %}{{ t("today_chip_no_goal", count=today_count) }}{% endif %}
+    </a>
+  {% endif %}
 </div>
