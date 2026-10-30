@@ -151,6 +151,13 @@ def test_duo_invitation_acceptance_and_leave(alice: Client, bob: Client) -> None
     assert "Accept" in bob_home and "Decline" in bob_home
     battle_id = int(re.findall(r"/duo/(\d+)/accept", bob_home)[0])
     assert 'class="nav-count">1</span>' in bob_home
+    activity_card = re.search(
+        r'<section class="panel activity-card".*?</section>', bob_home, re.DOTALL
+    )
+    assert activity_card
+    assert "<strong>alice</strong>" in activity_card.group(0)
+    assert f'action="/duo/{battle_id}/accept"' in activity_card.group(0)
+    assert 'class="activity-accept"' in activity_card.group(0)
 
     bob.form(f"/duo/{battle_id}/accept")
     alice_home = alice.get("/").text

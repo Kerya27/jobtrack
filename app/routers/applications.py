@@ -241,11 +241,13 @@ def index(
     context = {"user": user, **list_context(db, user, filters, _view(params), viewer=user)}
     battle = duo_svc.current_battle(db, user.id)
     today = svc.today_local()
+    calendar_days = [today - timedelta(days=days_ago) for days_ago in range(13, -1, -1)]
     context.update(
         activity_streak=svc.application_streak(db, user.id, user.daily_goal),
-        activity_calendar_days=[
-            today - timedelta(days=days_ago) for days_ago in range(13, -1, -1)
-        ],
+        activity_calendar_days=calendar_days,
+        activity_calendar_counts=svc.sent_counts_by_day(
+            db, user.id, calendar_days[0], today
+        ),
         activity_today=today,
         activity_battle=battle,
         activity_friends=friends_svc.friends(db, user.id),

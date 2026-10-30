@@ -28,7 +28,13 @@
         {% if activity_battle.battle.challenger_id == user.id %}
           <span class="activity-pending">{{ t("duo_waiting", name=activity_battle.friend_name) }}</span>
         {% else %}
-          <span class="activity-pending">{{ t("duo_invited_you", name=activity_battle.friend_name) }}</span>
+          <span class="activity-pending">
+            <strong>{{ activity_battle.friend_name }}</strong> {{ t("duo_invited_you_suffix") }}
+          </span>
+          <form method="post" action="/duo/{{ activity_battle.battle.id }}/accept" class="inline-form">
+            {{ csrf() }}
+            <button type="submit" class="activity-accept">{{ t("duo_accept") }}</button>
+          </form>
         {% endif %}
         <form method="post" action="/duo/{{ activity_battle.battle.id }}/leave" class="inline-form">
           {{ csrf() }}
@@ -57,7 +63,9 @@
              aria-label="{{ day.isoformat() }}">
           <span class="activity-calendar-number">{{ day.day }}</span>
           <span class="activity-calendar-divider" aria-hidden="true"></span>
-          <span class="activity-calendar-placeholder" aria-hidden="true"></span>
+          <span class="activity-calendar-count{% if user.daily_goal and activity_calendar_counts.get(day, 0) >= user.daily_goal %} is-goal-met{% else %} is-goal-unmet{% endif %}">
+            {{ activity_calendar_counts.get(day, 0) }}{% if user.daily_goal %}/{{ user.daily_goal }}{% endif %}
+          </span>
         </div>
       {% endfor %}
     </div>

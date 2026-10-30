@@ -440,7 +440,8 @@ article > :last-child, .panel > :last-child { margin-bottom: 0; }
   font-size: 0.82rem;
 }
 .activity-card .activity-invite-form button:not(.nav-item):not(.icon-btn):not(.link-button),
-.activity-card button.activity-leave:not(.nav-item):not(.icon-btn):not(.link-button) {
+.activity-card button.activity-leave:not(.nav-item):not(.icon-btn):not(.link-button),
+.activity-card button.activity-accept:not(.nav-item):not(.icon-btn):not(.link-button) {
   width: auto;
   padding: 0.38rem 0.65rem;
   border-radius: var(--radius-pill);
@@ -456,6 +457,14 @@ article > :last-child, .panel > :last-child { margin-bottom: 0; }
   border-color: var(--danger);
   background: var(--surface);
   color: var(--danger);
+  box-shadow: none;
+}
+.activity-card button.activity-accept:not(.nav-item):not(.icon-btn):not(.link-button) {
+  background: var(--ok);
+  color: #fff;
+}
+.activity-card button.activity-accept:not(.nav-item):not(.icon-btn):not(.link-button):hover {
+  background: color-mix(in srgb, var(--ok) 85%, black);
   box-shadow: none;
 }
 .activity-pending { color: var(--muted); font-size: 0.82rem; }
@@ -490,13 +499,33 @@ article > :last-child, .panel > :last-child { margin-bottom: 0; }
   background: var(--primary-soft);
 }
 .activity-calendar-number {
-  font-size: 0.8rem;
-  font-weight: 650;
+  font-size: 0.95rem;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
 .activity-calendar-divider { width: 65%; height: 1px; background: var(--line); }
-.activity-calendar-placeholder { height: 0.55rem; }
+.activity-calendar-count {
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.activity-calendar-count.is-goal-unmet { color: var(--muted); }
+.activity-calendar-count.is-goal-met {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.18rem;
+  padding: 0.14rem 0.34rem;
+  border: 1px solid color-mix(in srgb, var(--ok) 24%, transparent);
+  border-radius: var(--radius-pill);
+  color: color-mix(in srgb, var(--ok) 76%, var(--ink));
+  background: color-mix(in srgb, var(--ok) 12%, var(--surface));
+}
+.activity-calendar-count.is-goal-met::before {
+  content: "✓";
+  font-size: 0.62rem;
+}
 .duo-notification { padding-top: 0.65rem; border-top: 1px solid var(--line); }
 .duo-notification p { margin-bottom: 0.45rem; }
 .duo-notification-actions { display: flex; gap: 0.4rem; }

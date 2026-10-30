@@ -117,6 +117,23 @@ def sent_today_count(db: Session, user_id: int, filters: ListFilters) -> int:
     return db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
 
 
+def sent_counts_by_day(
+    db: Session, user_id: int, start: date, end: date
+) -> dict[date, int]:
+    """Count sent applications by applied date in the inclusive date range."""
+    rows = db.execute(
+        select(Application.applied_at, func.count())
+        .where(
+            Application.user_id == user_id,
+            Application.applied_at >= start,
+            Application.applied_at <= end,
+            Application.status != ApplicationStatus.SAVED,
+        )
+        .group_by(Application.applied_at)
+    ).all()
+    return {applied_on: count for applied_on, count in rows if applied_on}
+
+
 def application_streak(db: Session, user_id: int, goal: int) -> int:
     """Consecutive days meeting the daily goal; an incomplete today preserves yesterday's streak."""
     today = today_local()

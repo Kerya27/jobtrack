@@ -185,6 +185,21 @@ def test_activity_calendar_shows_last_14_days_ending_today(alice: Client) -> Non
     assert 'class="activity-calendar-day is-today"' in content
 
 
+def test_activity_calendar_shows_sent_count_and_daily_goal(alice: Client) -> None:
+    today = today_local()
+    yesterday = today - timedelta(days=1)
+    for index in range(5):
+        alice.create_app(company=f"Today {index}", applied_at=today.isoformat())
+    alice.create_app(company="Yesterday", applied_at=yesterday.isoformat())
+    alice.create_app(company="Saved today", status="saved", applied_at=today.isoformat())
+
+    page = alice.get("/").text
+
+    assert f'<span class="activity-calendar-number">{today.day}</span>' in page
+    assert 'class="activity-calendar-count is-goal-met">\n            5/5' in page
+    assert 'class="activity-calendar-count is-goal-unmet">\n            1/5' in page
+
+
 def test_delete_removes_application_and_events(alice: Client, db: Session) -> None:
     app = alice.create_app()
     alice.form(f"/applications/{app['id']}/events", {"text": "note"})
