@@ -841,9 +841,13 @@ small { color: var(--muted); }
 .app-row {
   display: flex; gap: var(--jt-gap); justify-content: space-between; align-items: center;
   margin: 0; padding: 0.95rem 1.05rem;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 7rem;
+  transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
+}
+.app-row:nth-child(-n+8) {
   animation: rise 0.4s var(--ease) both;
   animation-delay: calc(var(--i, 0) * 35ms);
-  transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
 }
 .app-row:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 .app-main { min-width: 0; flex: 1; }
