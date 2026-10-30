@@ -428,6 +428,11 @@ article > :last-child, .panel > :last-child { margin-bottom: 0; }
   font-size: 0.85rem;
   white-space: nowrap;
 }
+.activity-player.is-leading {
+  border-color: color-mix(in srgb, var(--ok) 38%, var(--line));
+  background: color-mix(in srgb, var(--ok) 10%, var(--surface));
+}
+.activity-player.is-leading strong { color: color-mix(in srgb, var(--ok) 76%, var(--ink)); }
 .activity-player strong { font-variant-numeric: tabular-nums; }
 .activity-versus { font-size: 1.1rem; }
 .activity-invite-form { gap: 0.4rem; }
@@ -449,14 +454,19 @@ article > :last-child, .panel > :last-child { margin-bottom: 0; }
   white-space: nowrap;
 }
 .activity-card button.activity-leave:not(.nav-item):not(.icon-btn):not(.link-button) {
-  border-color: var(--line);
-  background: var(--surface);
+  padding: 0.22rem 0.35rem;
+  border-color: transparent;
+  border-radius: 8px;
+  background: transparent;
   color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 500;
 }
 .activity-card button.activity-leave:not(.nav-item):not(.icon-btn):not(.link-button):hover {
-  border-color: var(--danger);
-  background: var(--surface);
+  border-color: transparent;
+  background: color-mix(in srgb, var(--danger) 8%, var(--surface));
   color: var(--danger);
+  transform: none;
   box-shadow: none;
 }
 .activity-card button.activity-accept:not(.nav-item):not(.icon-btn):not(.link-button) {

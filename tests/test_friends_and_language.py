@@ -164,7 +164,34 @@ def test_duo_invitation_acceptance_and_leave(alice: Client, bob: Client) -> None
     bob_home = bob.get("/").text
     assert "Leave battle" in alice_home and "⚡" in alice_home
     assert "Leave battle" in bob_home and "⚡" in bob_home
-    assert "1/5" in alice_home and "1/5" in bob_home
+    for page in (alice_home, bob_home):
+        activity_card = re.search(
+            r'<section class="panel activity-card".*?</section>', page, re.DOTALL
+        )
+        assert activity_card
+        player_blocks = re.findall(
+            r'<div class="(activity-player.*?)</div>', activity_card.group(0), re.DOTALL
+        )
+        assert len(player_blocks) == 2
+        assert all("is-leading" not in block for block in player_blocks)
+        assert all(re.search(r"<strong>1</strong>", block) for block in player_blocks)
+        assert all(not re.search(r"<strong>\d+/\d+</strong>", block) for block in player_blocks)
+
+    alice.create_app(company="Alice second job")
+    alice_home = alice.get("/").text
+    activity_card = re.search(
+        r'<section class="panel activity-card".*?</section>', alice_home, re.DOTALL
+    )
+    assert activity_card
+    player_blocks = re.findall(
+        r'<div class="(activity-player.*?)</div>', activity_card.group(0), re.DOTALL
+    )
+    assert len(player_blocks) == 2
+    assert player_blocks[0].startswith("activity-player is-leading")
+    assert "<strong>2</strong>" in player_blocks[0]
+    assert player_blocks[1].startswith("activity-player")
+    assert "is-leading" not in player_blocks[1]
+    assert "<strong>1</strong>" in player_blocks[1]
 
     alice.form(f"/duo/{battle_id}/leave")
     assert "Challenge" in alice.get("/").text

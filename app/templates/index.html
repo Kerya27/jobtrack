@@ -11,14 +11,14 @@
     </div>
     <div class="activity-battle">
       {% if activity_battle and activity_battle.battle.status.value == "active" %}
-        <div class="activity-player">
+        <div class="activity-player{% if activity_today_count > activity_friend_today_count %} is-leading{% endif %}">
           <span>{{ t("activity_you") }}</span>
-          <strong>{{ activity_today_count }}{% if user.daily_goal %}/{{ user.daily_goal }}{% endif %}</strong>
+          <strong>{{ activity_today_count }}</strong>
         </div>
         <span class="activity-versus" aria-label="{{ t('activity_versus') }}">⚡</span>
-        <div class="activity-player">
+        <div class="activity-player{% if activity_friend_today_count > activity_today_count %} is-leading{% endif %}">
           <span>{{ activity_battle.friend_name }}</span>
-          <strong>{{ activity_friend_today_count }}{% if activity_battle.friend.daily_goal %}/{{ activity_battle.friend.daily_goal }}{% endif %}</strong>
+          <strong>{{ activity_friend_today_count }}</strong>
         </div>
         <form method="post" action="/duo/{{ activity_battle.battle.id }}/leave" class="inline-form">
           {{ csrf() }}
