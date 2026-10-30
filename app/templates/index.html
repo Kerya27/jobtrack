@@ -2,6 +2,57 @@
 {% from "macros.html" import csrf, icon with context %}
 
 {% block content %}
+{% from "macros.html" import csrf with context %}
+<section class="panel activity-card" aria-label="{{ t('activity_title') }}">
+  <div class="activity-card-top">
+    <div class="activity-streak-summary">
+      <span class="activity-fire" aria-hidden="true">🔥</span>
+      <strong>{{ t("activity_streak", count=activity_streak) }}</strong>
+    </div>
+    <div class="activity-battle">
+      {% if activity_battle and activity_battle.battle.status.value == "active" %}
+        <div class="activity-player">
+          <span>{{ t("activity_you") }}</span>
+          <strong>{{ activity_today_count }}{% if user.daily_goal %}/{{ user.daily_goal }}{% endif %}</strong>
+        </div>
+        <span class="activity-versus" aria-label="{{ t('activity_versus') }}">⚡</span>
+        <div class="activity-player">
+          <span>{{ activity_battle.friend_name }}</span>
+          <strong>{{ activity_friend_today_count }}{% if activity_battle.friend.daily_goal %}/{{ activity_battle.friend.daily_goal }}{% endif %}</strong>
+        </div>
+        <form method="post" action="/duo/{{ activity_battle.battle.id }}/leave" class="inline-form">
+          {{ csrf() }}
+          <button type="submit" class="activity-leave">{{ t("duo_leave") }}</button>
+        </form>
+      {% elif activity_battle %}
+        {% if activity_battle.battle.challenger_id == user.id %}
+          <span class="activity-pending">{{ t("duo_waiting", name=activity_battle.friend_name) }}</span>
+        {% else %}
+          <span class="activity-pending">{{ t("duo_invited_you", name=activity_battle.friend_name) }}</span>
+        {% endif %}
+        <form method="post" action="/duo/{{ activity_battle.battle.id }}/leave" class="inline-form">
+          {{ csrf() }}
+          <button type="submit" class="activity-leave">{{ t("duo_cancel_invite") }}</button>
+        </form>
+      {% elif activity_friends %}
+        <form method="post" action="/duo/invite" class="activity-invite-form">
+          {{ csrf() }}
+          <label for="activity-friend">{{ t("duo_challenge") }}</label>
+          <select id="activity-friend" name="friend_id" required>
+            {% for row in activity_friends %}
+              <option value="{{ row.user.id }}">{{ row.name }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit">{{ t("duo_invite") }}</button>
+        </form>
+      {% else %}
+        <a href="/friends" class="activity-add-friend">{{ t("duo_add_friend") }}</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="activity-card-bottom" aria-hidden="true"></div>
+</section>
+
 <article class="quick-add">
   <div class="quick-head">
     <div>

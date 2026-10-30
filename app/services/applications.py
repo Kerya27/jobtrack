@@ -7,7 +7,7 @@ so data isolation is enforced in one place.
 import re
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, replace
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import Literal
 
 from sqlalchemy import Select, delete, func, or_, select
@@ -115,6 +115,32 @@ def sent_today_count(db: Session, user_id: int, filters: ListFilters) -> int:
     """For the "Today 3/5" chip: exactly the rows you'd see after clicking it."""
     stmt = _filtered(user_id, replace(filters, sent="today"))
     return db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
+
+
+def application_streak(db: Session, user_id: int, goal: int) -> int:
+    """Consecutive days meeting the daily goal; an incomplete today preserves yesterday's streak."""
+    today = today_local()
+    rows = db.execute(
+        select(Application.applied_at, func.count())
+        .where(
+            Application.user_id == user_id,
+            Application.applied_at <= today,
+            Application.status != ApplicationStatus.SAVED,
+        )
+        .group_by(Application.applied_at)
+    ).all()
+    counts: dict[date, int] = {applied_on: count for applied_on, count in rows if applied_on}
+
+    def completed(day: date) -> bool:
+        count = counts.get(day, 0)
+        return count >= goal if goal else count > 0
+
+    day = today if completed(today) else today - timedelta(days=1)
+    streak = 0
+    while completed(day):
+        streak += 1
+        day -= timedelta(days=1)
+    return streak
 
 
 def distinct_sources(db: Session, user_id: int) -> list[str]:

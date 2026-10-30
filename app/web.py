@@ -24,6 +24,7 @@ from app.services.applications import (
     normalize_company,
     sent_today_count,
 )
+from app.services.duo import incoming_invites
 from app.services.friends import incoming_count
 from app.timeutil import format_date, format_datetime
 
@@ -100,10 +101,14 @@ def render(
     is_partial = name.startswith("partials/")
     user = (context or {}).get("user") or getattr(request.state, "current_user", None)
     db = getattr(request.state, "db", None)
+    invites = incoming_invites(db, user.id) if db is not None and user else []
+    friend_requests = incoming_count(db, user.id) if db is not None and user else 0
     ctx: dict[str, Any] = {
         "csrf_token": get_csrf_token(request),
         "flashes": pop_flashes(request) if not is_partial else [],
-        "incoming_requests": incoming_count(db, user.id) if db is not None and user else 0,
+        "incoming_requests": friend_requests,
+        "duo_invites": invites,
+        "notification_count": friend_requests + len(invites),
         "daily_sent_count": sent_today_count(db, user.id, ListFilters())
         if db is not None and user
         else 0,

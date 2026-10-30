@@ -135,6 +135,35 @@ def test_friend_applied_badge(alice: Client, bob: Client) -> None:
     assert page.count("Also applied") == 1  # Bob only saved the second one, didn't apply
 
 
+def test_duo_invitation_acceptance_and_leave(alice: Client, bob: Client) -> None:
+    befriend(alice, bob, "bob@example.com")
+    alice.create_app(company="Alice job")
+    bob.create_app(company="Bob job")
+
+    sent = alice.form("/duo/invite", {"friend_id": user_id(bob)}, follow_redirects=False)
+    assert sent.status_code == 303
+    alice_home = alice.get("/").text
+    assert "Waiting for bob to accept" in alice_home
+    assert "Alice job" in alice_home
+
+    bob_home = bob.get("/").text
+    assert "alice challenges you" in bob_home
+    assert "Accept" in bob_home and "Decline" in bob_home
+    battle_id = int(re.findall(r"/duo/(\d+)/accept", bob_home)[0])
+    assert 'class="nav-count">1</span>' in bob_home
+
+    bob.form(f"/duo/{battle_id}/accept")
+    alice_home = alice.get("/").text
+    bob_home = bob.get("/").text
+    assert "Leave battle" in alice_home and "⚡" in alice_home
+    assert "Leave battle" in bob_home and "⚡" in bob_home
+    assert "1/5" in alice_home and "1/5" in bob_home
+
+    alice.form(f"/duo/{battle_id}/leave")
+    assert "Challenge" in alice.get("/").text
+    assert "Challenge" in bob.get("/").text
+
+
 def test_deleting_an_account_removes_friendships(alice: Client, bob: Client, db: Session) -> None:
     befriend(alice, bob, "bob@example.com")
     bob.form("/settings/delete", {"password": "correct-horse-42"})

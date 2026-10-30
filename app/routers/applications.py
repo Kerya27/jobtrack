@@ -13,9 +13,10 @@ from pydantic import ValidationError
 from app.config import get_settings
 from app.deps import CSRFProtected, CurrentUser, DbSession
 from app.i18n import t
-from app.models import Application, ApplicationStatus, EventType, User, WorkMode
+from app.models import Application, ApplicationStatus, DuoStatus, EventType, User, WorkMode
 from app.schemas import ApplicationIn, CaptureIn, EventIn, form_errors
 from app.services import applications as svc
+from app.services import duo as duo_svc
 from app.services import friends as friends_svc
 from app.services import job_parser, rate_limit
 from app.services.ssrf import FetchFailure
@@ -237,6 +238,22 @@ def index(
     params = request.query_params
     filters = parse_filters(params)
     context = {"user": user, **list_context(db, user, filters, _view(params), viewer=user)}
+    battle = duo_svc.current_battle(db, user.id)
+    context.update(
+        activity_streak=svc.application_streak(db, user.id, user.daily_goal),
+        activity_battle=battle,
+        activity_friends=friends_svc.friends(db, user.id),
+        activity_today_count=svc.sent_today_count(db, user.id, svc.ListFilters()),
+        activity_friend_today_count=(
+            svc.sent_today_count(
+                db,
+                battle.friend.id,
+                svc.ListFilters(),
+            )
+            if battle and battle.battle.status == DuoStatus.ACTIVE
+            else 0
+        ),
+    )
     if is_htmx(request) and request.headers.get("hx-target") == "results":
         return render_results(request, context)
     if clone is not None:

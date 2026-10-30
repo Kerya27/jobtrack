@@ -392,6 +392,82 @@ article, .panel {
   margin: 0 0 1.1rem;
 }
 article > :last-child, .panel > :last-child { margin-bottom: 0; }
+.activity-card {
+  display: grid;
+  grid-template-rows: minmax(3.5rem, auto) minmax(0, 1fr);
+  height: 8.0625rem;
+  padding: 0;
+  overflow: hidden;
+}
+.activity-card-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-width: 0;
+  align-items: center;
+  gap: 0;
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+.activity-streak-summary,
+.activity-battle,
+.activity-player,
+.activity-invite-form {
+  display: flex;
+  align-items: center;
+}
+.activity-streak-summary { min-width: 0; gap: 0.4rem; }
+.activity-streak-summary strong { font-size: 0.95rem; }
+.activity-fire { font-size: 1.15rem; }
+.activity-battle { min-width: 0; justify-content: center; gap: 0.6rem; }
+.activity-player {
+  gap: 0.4rem;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.activity-player strong { font-variant-numeric: tabular-nums; }
+.activity-versus { font-size: 1.1rem; }
+.activity-invite-form { gap: 0.4rem; }
+.activity-invite-form label { margin: 0; color: var(--muted); font-size: 0.78rem; }
+.activity-invite-form select {
+  width: auto;
+  min-width: 7rem;
+  margin: 0;
+  padding: 0.35rem 1.8rem 0.35rem 0.6rem;
+  font-size: 0.82rem;
+}
+.activity-card .activity-invite-form button:not(.nav-item):not(.icon-btn):not(.link-button),
+.activity-card button.activity-leave:not(.nav-item):not(.icon-btn):not(.link-button) {
+  width: auto;
+  padding: 0.38rem 0.65rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+.activity-card button.activity-leave:not(.nav-item):not(.icon-btn):not(.link-button) {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--muted);
+}
+.activity-card button.activity-leave:not(.nav-item):not(.icon-btn):not(.link-button):hover {
+  border-color: var(--danger);
+  background: var(--surface);
+  color: var(--danger);
+  box-shadow: none;
+}
+.activity-pending { color: var(--muted); font-size: 0.82rem; }
+.activity-add-friend { font-size: 0.85rem; }
+.activity-card-bottom { min-height: 0; }
+.duo-notification { padding-top: 0.65rem; border-top: 1px solid var(--line); }
+.duo-notification p { margin-bottom: 0.45rem; }
+.duo-notification-actions { display: flex; gap: 0.4rem; }
+.notification-popover .duo-notification-actions button:not(.nav-item):not(.icon-btn):not(.link-button) {
+  width: auto;
+  padding: 0.35rem 0.65rem;
+}
 
 /* ---------- forms ---------- */
 label { display: block; font-weight: 550; font-size: 0.9rem; margin: 0 0 0.85rem; }
@@ -1104,6 +1180,10 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: brightness(0); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 768px) {
+  .activity-card { height: auto; min-height: 8.0625rem; }
+  .activity-card-top { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; }
+  .activity-battle { justify-content: center; flex-wrap: nowrap; gap: 0.35rem; }
+  .activity-card-bottom { min-height: 3rem; }
   .card-layout { grid-template-columns: 1fr; }
   .app-row { flex-direction: column; align-items: stretch; }
   .app-side select { width: 100%; }
