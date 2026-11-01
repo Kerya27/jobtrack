@@ -5,10 +5,6 @@
 {% from "macros.html" import csrf with context %}
 <section class="panel activity-card" aria-label="{{ t('activity_title') }}">
   <div class="activity-card-top">
-    <div class="activity-streak-summary">
-      <span class="activity-fire" aria-hidden="true">🔥</span>
-      <strong>{{ t("activity_streak", count=activity_streak) }}</strong>
-    </div>
     <div class="activity-battle">
       {% if activity_battle and activity_battle.battle.status.value == "active" %}
         <div class="activity-player{% if activity_today_count > activity_friend_today_count %} is-leading{% endif %}">
@@ -63,6 +59,10 @@
       {% else %}
         <a href="/friends" class="activity-add-friend">{{ t("duo_add_friend") }}</a>
       {% endif %}
+    </div>
+    <div class="activity-streak-summary">
+      <span class="activity-fire" aria-hidden="true">🔥</span>
+      <strong>{{ t("activity_streak", count=activity_streak) }}</strong>
     </div>
   </div>
   <div class="activity-card-bottom">
