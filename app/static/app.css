@@ -416,8 +416,16 @@ article > :last-child, .panel > :last-child { margin-bottom: 0; }
   align-items: center;
 }
 .activity-streak-summary { min-width: 0; justify-content: flex-end; gap: 0.4rem; }
-.activity-streak-summary strong { font-size: 0.95rem; }
-.activity-fire { font-size: 1.15rem; }
+.activity-streak-summary strong {
+  font-size: 0.95rem;
+  animation: streak-text-shake 850ms ease-out both;
+}
+.activity-fire {
+  display: inline-block;
+  font-size: 1.15rem;
+  transform-origin: center bottom;
+  animation: flame-flicker 850ms ease-out both;
+}
 .activity-battle { min-width: 0; justify-content: flex-start; gap: 0.6rem; }
 .activity-player {
   gap: 0.4rem;
@@ -529,9 +537,14 @@ article > :last-child, .panel > :last-child { margin-bottom: 0; }
   box-shadow: inset 0 0 0 1px var(--primary);
 }
 .date-filter-reset { margin: 0 0 0.55rem; text-align: right; font-size: 0.82rem; }
+.activity-calendar-weekday {
+  color: var(--muted);
+  font-size: 0.58rem;
+  line-height: 1;
+}
 .activity-calendar-number {
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 750;
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
@@ -1281,6 +1294,17 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: brightness(0); }
 @keyframes rise {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
+}
+@keyframes flame-flicker {
+  0% { transform: scale(0.75) rotate(-12deg); }
+  35% { transform: scale(1.16) rotate(8deg); }
+  65% { transform: scale(0.94) rotate(-5deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+@keyframes streak-text-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-1px); }
+  40%, 80% { transform: translateX(1px); }
 }
 @keyframes growX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes growY { from { transform: scaleY(0); } to { transform: scaleY(1); } }

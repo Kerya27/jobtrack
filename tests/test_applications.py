@@ -183,6 +183,11 @@ def test_activity_calendar_shows_last_14_days_ending_today(alice: Client) -> Non
     assert len(day_cards) == 14
     assert dates[-1] == today_local().isoformat()
     assert 'class="activity-calendar-day is-today is-selected"' in content
+    weekdays = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    assert (
+        f'<span class="activity-calendar-weekday">{weekdays[today_local().weekday()]}</span>'
+        in content
+    )
 
 
 def test_activity_calendar_shows_sent_count_and_daily_goal(alice: Client) -> None:
