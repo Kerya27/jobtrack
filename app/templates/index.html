@@ -15,10 +15,19 @@
           <span>{{ t("activity_you") }}</span>
           <strong>{{ activity_today_count }}</strong>
         </div>
-        <span class="activity-versus" aria-label="{{ t('activity_versus') }}">⚡</span>
+        <span class="activity-versus"
+              title="{{ t('duo_score_title', you=activity_battle_score[0], friend=activity_battle_score[1]) }}"
+              aria-label="{{ t('duo_score_title', you=activity_battle_score[0], friend=activity_battle_score[1]) }}">
+          <span aria-hidden="true">⚡</span>
+          <small aria-hidden="true">
+            <strong{% if activity_battle_score[0] > activity_battle_score[1] %} class="is-leading"{% endif %}>{{ activity_battle_score[0] }}</strong>
+            <span>–</span>
+            <strong{% if activity_battle_score[1] > activity_battle_score[0] %} class="is-leading"{% endif %}>{{ activity_battle_score[1] }}</strong>
+          </small>
+        </span>
         <div class="activity-player{% if activity_friend_today_count > activity_today_count %} is-leading{% endif %}">
-          <span>{{ activity_battle.friend_name }}</span>
           <strong>{{ activity_friend_today_count }}</strong>
+          <span>{{ activity_battle.friend_name }}</span>
         </div>
         <form method="post" action="/duo/{{ activity_battle.battle.id }}/leave" class="inline-form">
           {{ csrf() }}

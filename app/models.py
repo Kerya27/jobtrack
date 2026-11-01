@@ -177,6 +177,7 @@ class DuoBattle(Base):
         _str_enum(DuoStatus, "duo_status"), default=DuoStatus.PENDING
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class Friendship(Base):

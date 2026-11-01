@@ -2,7 +2,7 @@
 
 import re
 import tempfile
-from datetime import timedelta
+from datetime import UTC, datetime, time, timedelta
 from pathlib import Path
 
 from alembic.autogenerate import compare_metadata
@@ -14,8 +14,9 @@ from sqlalchemy.orm import Session
 from alembic import command
 from app.db import Base
 from app.i18n import EVENT_TYPE_LABELS, STATUS_LABELS, STRINGS, WORK_MODE_LABELS
-from app.models import Friendship
-from app.timeutil import today_local
+from app.models import DuoBattle, Friendship
+from app.services.duo import battle_score
+from app.timeutil import local_tz, today_local
 from tests.conftest import ROOT, Client, _logged_in_client
 
 
@@ -196,6 +197,57 @@ def test_duo_invitation_acceptance_and_leave(alice: Client, bob: Client) -> None
     alice.form(f"/duo/{battle_id}/leave")
     assert "Challenge" in alice.get("/").text
     assert "Challenge" in bob.get("/").text
+
+
+def test_duo_score_counts_completed_days_since_acceptance(
+    alice: Client, bob: Client, db: Session
+) -> None:
+    befriend(alice, bob, "bob@example.com")
+    today = today_local()
+    before_start = today - timedelta(days=4)
+    day_a_wins = today - timedelta(days=3)
+    day_tie = today - timedelta(days=2)
+    day_b_wins = today - timedelta(days=1)
+
+    for index in range(3):
+        alice.create_app(company=f"A win {index}", applied_at=day_a_wins.isoformat())
+    bob.create_app(company="B loss", applied_at=day_a_wins.isoformat())
+    for index in range(2):
+        alice.create_app(company=f"Tie A {index}", applied_at=day_tie.isoformat())
+        bob.create_app(company=f"Tie B {index}", applied_at=day_tie.isoformat())
+    alice.create_app(company="A loss", applied_at=day_b_wins.isoformat())
+    for index in range(2):
+        bob.create_app(company=f"B win {index}", applied_at=day_b_wins.isoformat())
+    alice.create_app(company="Before battle", applied_at=before_start.isoformat())
+    bob.create_app(company="Today should not score")
+
+    sent = alice.form("/duo/invite", {"friend_id": user_id(bob)}, follow_redirects=False)
+    assert sent.status_code == 303
+    bob_home = bob.get("/").text
+    battle_id = int(re.findall(r"/duo/(\d+)/accept", bob_home)[0])
+    bob.form(f"/duo/{battle_id}/accept")
+
+    battle = db.get(DuoBattle, battle_id)
+    assert battle
+    battle.started_at = datetime.combine(day_a_wins, time.min, tzinfo=local_tz()).astimezone(UTC)
+    db.commit()
+    assert battle_score(db, battle, user_id(alice)) == (1, 1)
+
+    alice_page = alice.get("/").text
+    bob_page = bob.get("/").text
+    assert "Completed-day wins: you 1, friend 1" in alice_page
+    assert "Completed-day wins: you 1, friend 1" in bob_page
+    assert re.search(
+        r"<small[^>]*>\s*<strong>1</strong>\s*<span>–</span>\s*<strong>1</strong>", alice_page
+    )
+
+    alice.create_app(company="Tie breaker", applied_at=day_tie.isoformat())
+    alice_page = alice.get("/").text
+    assert "Completed-day wins: you 2, friend 1" in alice_page
+    assert re.search(
+        r"<small[^>]*>\s*<strong class=\"is-leading\">2</strong>\s*<span>–</span>\s*<strong>1</strong>",
+        alice_page,
+    )
 
 
 def test_deleting_an_account_removes_friendships(alice: Client, bob: Client, db: Session) -> None:
