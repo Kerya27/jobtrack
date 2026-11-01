@@ -183,6 +183,12 @@ def test_activity_calendar_shows_last_14_days_ending_today(alice: Client) -> Non
     assert len(day_cards) == 14
     assert dates[-1] == today_local().isoformat()
     assert 'class="activity-calendar-day is-today is-selected"' in content
+    assert "activity-streak-summary" not in page
+    weekdays = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    assert (
+        f'<span class="activity-calendar-weekday">{weekdays[today_local().weekday()]}</span>'
+        in content
+    )
 
 
 def test_activity_calendar_shows_sent_count_and_daily_goal(alice: Client) -> None:
@@ -198,6 +204,7 @@ def test_activity_calendar_shows_sent_count_and_daily_goal(alice: Client) -> Non
     assert f'<span class="activity-calendar-number">{today.day}</span>' in page
     assert 'class="activity-calendar-count is-goal-met">\n            5/5' in page
     assert 'class="activity-calendar-count is-goal-unmet">\n            1/5' in page
+    assert "1 Day Streak!" in page
 
 
 def test_activity_calendar_filters_sent_applications_by_selected_day(alice: Client) -> None:
