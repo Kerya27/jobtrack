@@ -60,10 +60,12 @@
         <a href="/friends" class="activity-add-friend">{{ t("duo_add_friend") }}</a>
       {% endif %}
     </div>
-    <div class="activity-streak-summary">
-      <span class="activity-fire" aria-hidden="true">🔥</span>
-      <strong>{{ t("activity_streak", count=activity_streak) }}</strong>
-    </div>
+    {% if activity_streak >= 1 %}
+      <div class="activity-streak-summary">
+        <span class="activity-fire" aria-hidden="true">🔥</span>
+        <strong>{{ t("activity_streak", count=activity_streak) }}</strong>
+      </div>
+    {% endif %}
   </div>
   <div class="activity-card-bottom">
     <div class="activity-calendar" aria-label="{{ t('activity_calendar') }}">

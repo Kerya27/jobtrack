@@ -439,6 +439,7 @@ article > :last-child, .panel > :last-child { margin-bottom: 0; }
 .activity-player.is-leading {
   border-color: color-mix(in srgb, var(--ok) 38%, var(--line));
   background: color-mix(in srgb, var(--ok) 10%, var(--surface));
+  animation: leader-pulse 2.4s ease-in-out infinite;
 }
 .activity-player.is-leading strong { color: color-mix(in srgb, var(--ok) 76%, var(--ink)); }
 .activity-player strong { font-variant-numeric: tabular-nums; }
@@ -1305,6 +1306,10 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: brightness(0); }
   0%, 100% { transform: translateX(0); }
   20%, 60% { transform: translateX(-1px); }
   40%, 80% { transform: translateX(1px); }
+}
+@keyframes leader-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 0%, transparent); }
+  50% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 12%, transparent); }
 }
 @keyframes growX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes growY { from { transform: scaleY(0); } to { transform: scaleY(1); } }
