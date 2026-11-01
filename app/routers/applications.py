@@ -272,6 +272,11 @@ def index(
         activity_calendar_counts=svc.sent_counts_by_day(db, user.id, calendar_days[0], today),
         activity_today=today,
         activity_battle=battle,
+        activity_battle_score=(
+            duo_svc.battle_score(db, battle.battle, user.id)
+            if battle and battle.battle.status == DuoStatus.ACTIVE
+            else (0, 0)
+        ),
         activity_friends=friends_svc.friends(db, user.id),
         activity_today_count=svc.sent_today_count(db, user.id, svc.ListFilters()),
         activity_friend_today_count=(

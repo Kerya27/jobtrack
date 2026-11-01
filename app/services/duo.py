@@ -1,14 +1,25 @@
 """Invitations to, and membership in, a persistent two-person application battle."""
 
 from dataclasses import dataclass
+from datetime import timedelta
 from enum import StrEnum
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
-from app.models import DuoBattle, DuoStatus, Friendship, FriendshipStatus, User
+from app.models import (
+    Application,
+    ApplicationStatus,
+    DuoBattle,
+    DuoStatus,
+    Friendship,
+    FriendshipStatus,
+    User,
+    utcnow,
+)
 from app.services.applications import NotFoundError
 from app.services.friends import _between, display_name, friend_ids
+from app.timeutil import to_local, today_local
 
 
 class InviteOutcome(StrEnum):
@@ -109,7 +120,46 @@ def accept_invite(db: Session, user_id: int, battle_id: int) -> None:
     if friendship is None:
         raise NotFoundError
     battle.status = DuoStatus.ACTIVE
+    battle.started_at = utcnow()
     db.commit()
+
+
+def battle_score(db: Session, battle: DuoBattle, user_id: int) -> tuple[int, int]:
+    """Return completed-day wins for the current user and their opponent."""
+    if user_id == battle.challenger_id:
+        opponent_id = battle.opponent_id
+    elif user_id == battle.opponent_id:
+        opponent_id = battle.challenger_id
+    else:
+        raise NotFoundError
+
+    started_at = battle.started_at or battle.created_at
+    first_day = to_local(started_at).date()
+    last_day = today_local() - timedelta(days=1)
+    if first_day > last_day:
+        return 0, 0
+
+    daily_counts = db.execute(
+        select(Application.user_id, Application.applied_at, func.count())
+        .where(
+            Application.user_id.in_((user_id, opponent_id)),
+            Application.applied_at >= first_day,
+            Application.applied_at <= last_day,
+            Application.status != ApplicationStatus.SAVED,
+        )
+        .group_by(Application.user_id, Application.applied_at)
+    ).all()
+    counts = {(owner_id, day): count for owner_id, day, count in daily_counts}
+    user_score = 0
+    opponent_score = 0
+    for day in {day for _, day, _ in daily_counts}:
+        user_count = counts.get((user_id, day), 0)
+        opponent_count = counts.get((opponent_id, day), 0)
+        if user_count > opponent_count:
+            user_score += 1
+        elif opponent_count > user_count:
+            opponent_score += 1
+    return user_score, opponent_score
 
 
 def leave_battle(db: Session, user_id: int, battle_id: int) -> None:

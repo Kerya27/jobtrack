@@ -434,7 +434,17 @@ article > :last-child, .panel > :last-child { margin-bottom: 0; }
 }
 .activity-player.is-leading strong { color: color-mix(in srgb, var(--ok) 76%, var(--ink)); }
 .activity-player strong { font-variant-numeric: tabular-nums; }
-.activity-versus { font-size: 1.1rem; }
+.activity-versus {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.08rem;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.activity-versus small { display: flex; align-items: center; gap: 0.12rem; font-size: 0.62rem; }
+.activity-versus small strong { font-variant-numeric: tabular-nums; }
+.activity-versus small strong.is-leading { color: var(--ok); }
 .activity-invite-form { gap: 0.4rem; }
 .activity-invite-form label { margin: 0; color: var(--muted); font-size: 0.78rem; }
 .activity-invite-form select {
